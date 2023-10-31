@@ -308,7 +308,7 @@ const productFields = [
       { key: "No", value: "false" },
     ],
     required: true,
-    class: 'md:col-span-1 col-span-6'
+    class: 'lg:col-span-1 col-span-6'
   },
   {
     id: "isReturnable",
@@ -319,7 +319,7 @@ const productFields = [
       { key: "No", value: "false" },
     ],
     required: true,
-    class: 'md:col-span-1 col-span-6'
+    class: 'lg:col-span-1 col-span-6'
   },
   {
     id: "isVegetarian",
@@ -330,7 +330,7 @@ const productFields = [
       { key: "No", value: "false" },
     ],
     required: true,
-    class: 'md:col-span-1 col-span-6'
+    class: 'lg:col-span-1 col-span-6'
   },
   {
     id: "availableOnCod",
@@ -341,7 +341,7 @@ const productFields = [
       { key: "No", value: "false" },
     ],
     required: true,
-    class: 'md:col-span-1 col-span-6'
+    class: 'lg:col-span-1 col-span-6'
   },
   {
     id: "images",

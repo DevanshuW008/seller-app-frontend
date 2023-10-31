@@ -6,6 +6,20 @@
     line-height: normal;
 }
 
+.speech-modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 576px;
+    height: 576px;
+    background-color: #FFF;
+    border: 1px solid #E0E0E0;
+    border-radius: 5px;
+    padding: 20px;
+    outline: none !important;
+}
+
 .divider {
     margin: 15px 0;
 }
@@ -208,4 +222,197 @@
     display: flex;
     align-items: flex-end;
     justify-content: end;
+}
+
+.text-body-modal,
+.file-body-modal {
+    margin-top: 20px;
+    width: 100%;
+    height: 412px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    border: 1px solid #E0E0E0;
+    background: #F5F5F5;
+    padding: 15px;
+}
+
+.file-body-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-body-modal .content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.text-body-modal span {
+    color: #6C6C6C;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 22px;
+    /* 137.5% */
+}
+
+.modal-footer {
+    margin: 20px 0;
+}
+
+.btn-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mic-button {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #1976D2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.sbt-button {
+    width: 112px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    background: #1976D2;
+    color: #FFF;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    /* 125% */
+}
+
+.file-upload-btn {
+    width: 112px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    background: #A5A5A5;
+    ;
+    color: #FFF;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.file-body-modal .content .text {
+    color: #6C6C6C;
+    text-align: center;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 22px;
+    padding: 0px 60px
+        /* 137.5% */
+}
+
+.file-body-modal .content .upload-btn {
+    border-bottom-width: 0px;
+    background: #1976D2;
+    color: #000;
+    width: 203px;
+    height: 44px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    position: relative;
+    border-radius: 5px;
+}
+
+.file-body-modal .content .upload-btn::after {
+    content: "Upload from Gallery";
+    position: absolute;
+    top: 11px;
+    left: 25px;
+    z-index: 1;
+    cursor: pointer;
+    color: #FFF;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 20px;
+    /* 125% */
+}
+
+.file-body-modal .content .upload-btn input {
+    opacity: 0;
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+.file-body-modal .content .upload-btn input::-webkit-file-upload-button {
+    font: inherit;
+    -webkit-appearance: button;
+    width: 100%;
+    cursor: pointer;
+}
+
+.show-image {
+    margin-top: 20px;
+    width: 100%;
+    height: 412px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    border: 1px solid #E0E0E0;
+    background: #F5F5F5;
+    position: relative;
+}
+
+.show-image img {
+    width: 100%;
+    height: 100%;
+}
+
+.show-image .remove-button {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #7d7f7e;
+    border: 1px solid #969897;
+    top: 15px;
+    right: 15px;
+    padding: 12px;
+    cursor: pointer;
+}
+
+
+
+
+
+
+
+
+
+
+
+@media only screen and (max-width: 600px) {
+    .speech-modal {
+        width: 100%;
+        height: 100%;
+    }
 }
