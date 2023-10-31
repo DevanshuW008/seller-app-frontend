@@ -10,10 +10,10 @@ import {
   TextField,
   Stack,
   Chip,
-  Modal,
-  Box
+  Modal
 } from "@mui/material"
 import { DeleteOutlined } from "@mui/icons-material"
+import cogoToast from "cogo-toast"
 import { DatePicker } from "@mui/x-date-pickers/DatePicker"
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"
@@ -29,6 +29,7 @@ import DatePanel from "react-multi-date-picker/plugins/date_panel"
 import MicIcon from "../../../Assets/Images/micIcon.svg"
 import TextBodyModal from "./TextBodyModal"
 import UploadBodyModal from "./UploadBodyModal"
+import useCancellablePromise from "../../../Api/cancelRequest"
 
 const CssTextField = styled(TextField)({
   "& .MuiOutlinedInput-root": {
@@ -54,10 +55,12 @@ const ProductInput = ({
 }) => {
   const uploadFileRef = useRef(null)
   const [isImageChanged, setIsImageChanged] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [transcript, setTranscript] = useState("")
   const [listening, setListening] = useState(false)
   const [open, setOpen] = useState(false)
   const [fetchedImageSize, setFetchedImageSize] = useState(0)
+  const { cancellablePromise } = useCancellablePromise()
 
   const handleFocus = (fieldId) => {
     if (setFocusedField) {
@@ -102,6 +105,75 @@ const ProductInput = ({
       setFetchedImageSize(sizeInBytes)
     }
   }, [isImageChanged, state[item.id]])
+
+  const handleStartListening = () => {
+    if (isLoading) return
+    setTranscript("")
+    if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition
+      const recognition = new SpeechRecognition()
+
+      recognition.lang = "en-IN"
+
+      recognition.onstart = () => {
+        setListening(true)
+      }
+
+      recognition.onresult = (event) => {
+        const last = event.results.length - 1
+        const text = event.results[last][0].transcript
+        setTranscript((prevTranscript) => prevTranscript + " " + text)
+      }
+
+      recognition.onend = () => {
+        setListening(false)
+      }
+
+      // Start listening
+      recognition.start()
+    } else {
+      alert("Speech recognition is not supported in your browser.")
+    }
+  }
+
+  const closeModal = () => {
+    setOpen(false)
+    setTranscript("")
+  }
+
+  const getProductTitle = async (item) => {
+    if (transcript.length === 0) return
+    setIsLoading(true)
+    if (item.id === "productName") {
+      const url = "https://genai.ondcsutr.com/product/title/language"
+      const body = {
+        text: transcript,
+        language: "hi-In",
+        prompt:
+          "Context: Create a nice Title for the following product including all keywords and help improve listing quality index give only title",
+        desc: "Example: [Brand Name] - [Colour] coloured [Title] [All Keywords] with [USP]."
+      }
+      try {
+        const response = await cancellablePromise(postCall(url, body))
+        if (response?.results?.translatedContent) {
+          stateHandler({
+            ...state,
+            [item.id]: item.isUperCase
+              ? response.results.translatedContent.toUpperCase()
+              : response.results.translatedContent
+          })
+        } else {
+          cogoToast.error("Please try again")
+        }
+      } catch (error) {
+        cogoToast.error("Please try again")
+      }
+    }
+    setIsLoading(false)
+    setOpen(false)
+    setTranscript("")
+  }
 
   if (item.type === "input") {
     return (
@@ -150,11 +222,11 @@ const ProductInput = ({
               aria-labelledby="modal-modal-title"
               aria-describedby="modal-modal-description"
             >
-              <div class="speech-modal">
+              <div className="speech-modal">
                 <div className="modal-header">
                   <span
                     className="close-btn cursor-pointer"
-                    onClick={() => setOpen(false)}
+                    onClick={closeModal}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -171,12 +243,20 @@ const ProductInput = ({
                   </span>
                 </div>
                 <div className="modal-body">
-                  <TextBodyModal />
+                  <TextBodyModal
+                    listening={listening}
+                    transcript={transcript}
+                  />
                 </div>
                 <div className="modal-footer">
                   <div className="btn-group">
-                    <span className="mic-button">
-                      {!listening ? (
+                    {!listening ? (
+                      <button
+                        className={`mic-button${
+                          isLoading ? " opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        onClick={handleStartListening}
+                      >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="24"
@@ -193,7 +273,9 @@ const ProductInput = ({
                             fill="white"
                           />
                         </svg>
-                      ) : (
+                      </button>
+                    ) : (
+                      <span className="mic-button">
                         <svg
                           width="24"
                           height="24"
@@ -209,9 +291,18 @@ const ProductInput = ({
                             />
                           </g>
                         </svg>
-                      )}
-                    </span>
-                    <span className="sbt-button">Submit</span>
+                      </span>
+                    )}
+                    <button
+                      className={`sbt-button${
+                        transcript.length === 0
+                          ? " opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                      onClick={() => getProductTitle(item)}
+                    >
+                      {!isLoading ? "Submit" : "Loading..."}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -535,7 +626,7 @@ const ProductInput = ({
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DatePicker
             disableFuture
-            className="w-full date-input text-input-date"
+            className="w-full date-input"
             format={item.format || "DD/MM/YYYY"}
             views={item.views || ["year", "month", "day"]}
             onChange={(newValue) => {

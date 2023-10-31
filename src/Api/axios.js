@@ -34,11 +34,10 @@ export function postCall(url, params) {
       });
       return resolve(response.data);
     } catch (err) {
-      const { status } = err.response;
       if (url === "/api/v1/auth/login") {
         return reject(err);
       }
-      if (status === 401) return unAuthorizedResponse();
+      if (err?.response?.status === 401) return unAuthorizedResponse();
       return reject(err);
     }
   });

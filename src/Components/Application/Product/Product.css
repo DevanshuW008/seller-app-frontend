@@ -24,9 +24,10 @@
     margin: 15px 0;
 }
 
-.date-input .css-o9k5xi-MuiInputBase-root-MuiOutlinedInput-root {
+.date-input .MuiInputBase-root {
     height: 40px !important;
     margin-top: -3px !important;
+    background-color: white;
 }
 
 .date-input .MuiOutlinedInput-notchedOutline {
@@ -128,8 +129,7 @@
     background-color: white;
 }
 
-.text-input .MuiInputBase-root,
-.text-input-date .MuiInputBase-root {
+.text-input .MuiInputBase-root {
     background-color: white;
 }
 
@@ -210,6 +210,7 @@
     top: 45px;
     right: 11px;
     cursor: pointer;
+    background: #fff;
 }
 
 .mic-icon img {
@@ -402,17 +403,15 @@
 
 
 
-
-
-
-
-
-
+.text-black {
+    --tw-text-opacity: 1;
+    color: rgb(0 0 0 / var(--tw-text-opacity)) !important;
+}
 
 
 @media only screen and (max-width: 600px) {
     .speech-modal {
-        width: 100%;
-        height: 100%;
+        width: 90%;
+        height: auto;
     }
 }
