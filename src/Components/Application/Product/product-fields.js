@@ -7,6 +7,7 @@ const productFields = [
     placeholder: "Product Code",
     type: "input",
     required: true,
+    class: 'md:col-span-3 col-span-6'
   },
   {
     id: "productName",
@@ -14,6 +15,8 @@ const productFields = [
     placeholder: "Product Name",
     type: "input",
     required: true,
+    class: 'col-span-6 md:col-span-3',
+    hasMicIcon: true,
   },
   {
     id: "MRP",
@@ -22,6 +25,7 @@ const productFields = [
     type: "number",
     required: true,
     valueInDecimal: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "retailPrice",
@@ -30,6 +34,7 @@ const productFields = [
     type: "number",
     required: true,
     valueInDecimal: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "purchasePrice",
@@ -38,6 +43,7 @@ const productFields = [
     type: "number",
     required: true,
     valueInDecimal: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "HSNCode",
@@ -45,6 +51,7 @@ const productFields = [
     placeholder: "HSN Code",
     type: "input",
     required: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "GST_Percentage",
@@ -59,6 +66,7 @@ const productFields = [
       { key: "28", value: 28 },
     ],
     required: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "productCategory",
@@ -70,6 +78,7 @@ const productFields = [
     type: "select",
     disableClearable: true,
     required: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "productSubcategory1",
@@ -79,6 +88,7 @@ const productFields = [
     type: "select",
     disableClearable: true,
     required: true,
+    class: 'md:col-span-2 col-span-6'
   },
 
   {
@@ -87,6 +97,7 @@ const productFields = [
     placeholder: "Manufacturer Or Packer Name",
     type: "input",
     required: true,
+    class: 'md:col-span-4 col-span-6'
   },
   {
     id: "manufacturerOrPackerAddress",
@@ -94,6 +105,7 @@ const productFields = [
     placeholder: "Manufacturer Or Packer Address",
     type: "input",
     required: true,
+    class: 'md:col-span-3 col-span-6'
   },
   {
     id: "commonOrGenericNameOfCommodity",
@@ -101,6 +113,7 @@ const productFields = [
     placeholder: "Common Or Generic Name Of Commodity",
     type: "input",
     required: true,
+    class: 'col-span-6 md:col-span-3'
   },
   {
     id: "monthYearOfManufacturePackingImport",
@@ -110,6 +123,7 @@ const productFields = [
     required: true,
     format: "MM/YYYY",
     views: ["year", "month"],
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "importerFSSAILicenseNo",
@@ -118,6 +132,7 @@ const productFields = [
     type: "number",
     maxLength: 14,
     required: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "brandOwnerFSSAILicenseNo",
@@ -126,6 +141,7 @@ const productFields = [
     type: "number",
     maxLength: 14,
     required: true,
+    class: 'md:col-span-2 col-span-6'
   },
 
   {
@@ -134,6 +150,7 @@ const productFields = [
     placeholder: "Quantity",
     type: "number",
     required: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "barcode",
@@ -142,6 +159,7 @@ const productFields = [
     type: "number",
     maxLength: 12,
     required: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "maxAllowedQty",
@@ -151,6 +169,7 @@ const productFields = [
     required: true,
     min: 1,
     maxLength: 10,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "UOM",
@@ -158,6 +177,7 @@ const productFields = [
     placeholder: "UOM",
     type: "input",
     required: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "packQty",
@@ -165,6 +185,8 @@ const productFields = [
     placeholder: "Measurement Quantity",
     type: "input",
     required: true,
+    class: 'md:col-span-2 col-span-6',
+    hasMicIcon: true,
   },
   {
     id: "length",
@@ -173,6 +195,8 @@ const productFields = [
     type: "input",
     maxLength: 6,
     required: true,
+    class: 'md:col-span-2 col-span-6',
+    hasMicIcon: true,
   },
   {
     id: "breadth",
@@ -181,6 +205,8 @@ const productFields = [
     type: "input",
     maxLength: 6,
     required: true,
+    class: 'md:col-span-2 col-span-6',
+    hasMicIcon: true,
   },
   {
     id: "height",
@@ -189,6 +215,8 @@ const productFields = [
     type: "input",
     maxLength: 6,
     required: true,
+    class: 'md:col-span-2 col-span-6',
+    hasMicIcon: true,
   },
   {
     id: "weight",
@@ -197,6 +225,8 @@ const productFields = [
     type: "input",
     maxLength: 3,
     required: true,
+    class: 'md:col-span-2 col-span-6',
+    hasMicIcon: true,
   },
   {
     id: "returnWindow",
@@ -205,6 +235,7 @@ const productFields = [
     type: "number",
     maxLength: 3,
     required: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "manufacturerName",
@@ -213,6 +244,7 @@ const productFields = [
     type: "input",
     maxLength: 50,
     required: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "manufacturedDate",
@@ -220,6 +252,7 @@ const productFields = [
     placeholder: "Manufactured Date",
     type: "date-picker",
     required: true,
+    class: 'md:col-span-2 col-span-6'
   },
   {
     id: "nutritionalInfo",
@@ -227,6 +260,7 @@ const productFields = [
     placeholder: "Nutritional Info",
     type: "input",
     required: true,
+    class: 'md:col-span-3 col-span-6'
   },
   {
     id: "additiveInfo",
@@ -234,6 +268,8 @@ const productFields = [
     placeholder: "Additive Info",
     type: "input",
     required: true,
+    class: 'md:col-span-3 col-span-6'
+
   },
   {
     id: "instructions",
@@ -241,6 +277,7 @@ const productFields = [
     placeholder: "Instructions",
     type: "input",
     required: true,
+    class: 'col-span-6'
   },
   {
     id: "longDescription",
@@ -249,6 +286,8 @@ const productFields = [
     type: "input",
     required: true,
     multiline: true,
+    class: 'col-span-6',
+    hasMicIcon: true,
   },
   {
     id: "description",
@@ -257,6 +296,8 @@ const productFields = [
     type: "input",
     required: true,
     multiline: true,
+    class: 'col-span-6',
+    hasMicIcon: true,
   },
   {
     id: "isCancellable",
@@ -267,6 +308,7 @@ const productFields = [
       { key: "No", value: "false" },
     ],
     required: true,
+    class: 'md:col-span-1 col-span-6'
   },
   {
     id: "isReturnable",
@@ -277,6 +319,7 @@ const productFields = [
       { key: "No", value: "false" },
     ],
     required: true,
+    class: 'md:col-span-1 col-span-6'
   },
   {
     id: "isVegetarian",
@@ -287,6 +330,7 @@ const productFields = [
       { key: "No", value: "false" },
     ],
     required: true,
+    class: 'md:col-span-1 col-span-6'
   },
   {
     id: "availableOnCod",
@@ -297,15 +341,17 @@ const productFields = [
       { key: "No", value: "false" },
     ],
     required: true,
+    class: 'md:col-span-1 col-span-6'
   },
   {
     id: "images",
     title:
-      "Images (Multiple file selection allowed, maximum size of 2Mb for each file)",
+      "Images",
     type: "upload",
     multiple: true,
     file_type: "product_image",
     required: true,
+    class: 'col-span-6'
   },
 ];
 
