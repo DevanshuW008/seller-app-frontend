@@ -401,7 +401,9 @@
     cursor: pointer;
 }
 
-
+.lang-select {
+    width: 140px;
+}
 
 .text-black {
     --tw-text-opacity: 1;

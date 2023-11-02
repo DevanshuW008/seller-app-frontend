@@ -21,7 +21,7 @@ import moment from "moment"
 import dayjs from "dayjs"
 import PlacePickerMap from "../../../Components/PlacePickerMap/PlacePickerMap"
 import { TimePicker } from "@mui/x-date-pickers/TimePicker"
-import { postCall } from "../../../Api/axios"
+import { getCall, postCall } from "../../../Api/axios"
 
 import DaysPicker from "react-multi-date-picker"
 import DatePanel from "react-multi-date-picker/plugins/date_panel"
@@ -45,6 +45,11 @@ const CssTextField = styled(TextField)({
   }
 })
 
+const defaultLanguage = {
+  key: "Hindi",
+  value: "hi"
+}
+
 const ProductInput = ({
   item,
   state,
@@ -55,12 +60,18 @@ const ProductInput = ({
 }) => {
   const uploadFileRef = useRef(null)
   const [isImageChanged, setIsImageChanged] = useState(false)
+  const [languageList, setLanguageList] = useState([])
+  const [selectLanguage, setSelectLanguage] = useState(defaultLanguage)
   const [isLoading, setIsLoading] = useState(false)
   const [transcript, setTranscript] = useState("")
   const [listening, setListening] = useState(false)
   const [open, setOpen] = useState(false)
   const [fetchedImageSize, setFetchedImageSize] = useState(0)
   const { cancellablePromise } = useCancellablePromise()
+
+  useEffect(() => {
+    getLanguageList()
+  }, [])
 
   const handleFocus = (fieldId) => {
     if (setFocusedField) {
@@ -96,6 +107,30 @@ const ProductInput = ({
     }
   }
 
+  const getLanguageList = async () => {
+    const url = "https://genai.ondcsutr.com/languages"
+    try {
+      const response = await cancellablePromise(getCall(url))
+      if (response?.results.length > 0) {
+        const result = response.results.map((lang) => {
+          return {
+            key: lang.displayName,
+            value: lang.languageCode
+          }
+        })
+        const uniqueArray = result.filter(
+          (value, index, self) =>
+            self.findIndex((item) => item.key === value.key) === index
+        )
+        setLanguageList(uniqueArray)
+      } else {
+        cogoToast.error("Network error")
+      }
+    } catch (error) {
+      cogoToast.error("Network error")
+    }
+  }
+
   useEffect(() => {
     if (item.type !== "upload") return
     if (isImageChanged === false && state[item.id] !== "") {
@@ -114,7 +149,7 @@ const ProductInput = ({
         window.SpeechRecognition || window.webkitSpeechRecognition
       const recognition = new SpeechRecognition()
 
-      recognition.lang = "en-IN"
+      recognition.lang = selectLanguage.value
 
       recognition.onstart = () => {
         setListening(true)
@@ -140,6 +175,7 @@ const ProductInput = ({
   const closeModal = () => {
     setOpen(false)
     setTranscript("")
+    setSelectLanguage(defaultLanguage)
   }
 
   const getProductTitle = async (item) => {
@@ -149,7 +185,7 @@ const ProductInput = ({
       const url = "https://genai.ondcsutr.com/product/title/language"
       const body = {
         text: transcript,
-        language: "hi-In",
+        language: selectLanguage.value,
         prompt:
           "Context: Create a nice Title for the following product including all keywords and help improve listing quality index give only title",
         desc: "Example: [Brand Name] - [Colour] coloured [Title] [All Keywords] with [USP]."
@@ -173,6 +209,11 @@ const ProductInput = ({
     setIsLoading(false)
     setOpen(false)
     setTranscript("")
+  }
+
+  const openModal = () => {
+    setOpen(!open)
+    setSelectLanguage(defaultLanguage)
   }
 
   if (item.type === "input") {
@@ -212,7 +253,7 @@ const ProductInput = ({
         />
         {item.hasMicIcon && (
           <>
-            <span className="mic-icon" onClick={() => setOpen(!open)}>
+            <span className="mic-icon" onClick={openModal}>
               <img src={MicIcon} alt="" />
             </span>
             <Modal
@@ -250,6 +291,31 @@ const ProductInput = ({
                 </div>
                 <div className="modal-footer">
                   <div className="btn-group">
+                    <div className="lang-select">
+                      <Autocomplete
+                        size="small"
+                        options={languageList}
+                        getOptionLabel={(option) => option.key}
+                        value={selectLanguage}
+                        isOptionEqualToValue={(option, value) =>
+                          option.key === value.key
+                        }
+                        disableClearable={true}
+                        onChange={(event, newValue) => {
+                          setSelectLanguage(newValue)
+                        }}
+                        className="text-input"
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            placeholder={"Select your language"}
+                            variant="outlined"
+                            error={item.error || false}
+                            helperText={item.error && item.helperText}
+                          />
+                        )}
+                      />
+                    </div>
                     {!listening ? (
                       <button
                         className={`mic-button${
