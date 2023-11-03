@@ -30,6 +30,7 @@ import MicIcon from "../../../Assets/Images/micIcon.svg"
 import TextBodyModal from "./TextBodyModal"
 import UploadBodyModal from "./UploadBodyModal"
 import useCancellablePromise from "../../../Api/cancelRequest"
+import useDebounce from "../../../hooks/useDebounce"
 
 const CssTextField = styled(TextField)({
   "& .MuiOutlinedInput-root": {
@@ -62,6 +63,12 @@ const ProductInput = ({
   const [isImageChanged, setIsImageChanged] = useState(false)
   const [languageList, setLanguageList] = useState([])
   const [selectLanguage, setSelectLanguage] = useState(defaultLanguage)
+  const [aiInput, setAiInput] = useState({
+    title: "",
+    longDescription: "",
+    shortDescription: ""
+  })
+  const [aiLoading, setAiLoading] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [transcript, setTranscript] = useState("")
   const [listening, setListening] = useState(false)
@@ -178,33 +185,11 @@ const ProductInput = ({
     setSelectLanguage(defaultLanguage)
   }
 
-  const getProductTitle = async (item) => {
+  const getInputTitle = async (item, language) => {
     if (transcript.length === 0) return
     setIsLoading(true)
     if (item.id === "productName") {
-      const url = "https://genai.ondcsutr.com/product/title/language"
-      const body = {
-        text: transcript,
-        language: selectLanguage.value,
-        prompt:
-          "Context: Create a nice Title for the following product including all keywords and help improve listing quality index give only title",
-        desc: "Example: [Brand Name] - [Colour] coloured [Title] [All Keywords] with [USP]."
-      }
-      try {
-        const response = await cancellablePromise(postCall(url, body))
-        if (response?.results?.translatedContent) {
-          stateHandler({
-            ...state,
-            [item.id]: item.isUperCase
-              ? response.results.translatedContent.toUpperCase()
-              : response.results.translatedContent
-          })
-        } else {
-          cogoToast.error("Please try again")
-        }
-      } catch (error) {
-        cogoToast.error("Please try again")
-      }
+      await getProductTitleAPI(transcript, item, language)
     }
     setIsLoading(false)
     setOpen(false)
@@ -214,6 +199,68 @@ const ProductInput = ({
   const openModal = () => {
     setOpen(!open)
     setSelectLanguage(defaultLanguage)
+  }
+
+  useDebounce(() => getResponseFromAi(), 1000, [aiInput])
+
+  const onChangeHandler = (event, item) => {
+    stateHandler({
+      ...state,
+      [item.id]: item.isUperCase
+        ? event.target.value.toUpperCase()
+        : event.target.value
+    })
+    if (item.id === "productName") {
+      setAiInput({
+        ...aiInput,
+        title: { ...item, value: event.target.value }
+      })
+    }
+  }
+
+  const getResponseFromAi = async () => {
+    // For Title
+    if (aiInput.title?.value.length > 0) {
+      const url = "https://genai.ondcsutr.com/languages/detect"
+      const body = [aiInput.title?.value]
+      try {
+        const langDetectResponse = await cancellablePromise(postCall(url, body))
+        const lang = langDetectResponse?.results[0]?.detections[0]?.languageCode
+        setAiLoading(true)
+        await getProductTitleAPI(aiInput.title?.value, aiInput.title, lang)
+      } catch (e) {
+        cogoToast.error("Please try again")
+      }
+    }
+  }
+
+  const getProductTitleAPI = async (value, item, language) => {
+    const url = "https://genai.ondcsutr.com/product/title/language"
+    const body = {
+      text: value,
+      language: language,
+      prompt:
+        "Context: Create a nice Title for the following product including all keywords and help improve listing quality index",
+      desc: "Example: [Brand Name] - [Colour] coloured [Title] [All Keywords] with [USP]."
+    }
+    try {
+      const response = await cancellablePromise(postCall(url, body))
+      if (response?.results?.translatedContent) {
+        stateHandler({
+          ...state,
+          [item.id]: item.isUperCase
+            ? response.results.translatedContent.toUpperCase()
+            : response.results.translatedContent
+        })
+        setAiLoading(false)
+      } else {
+        cogoToast.error("Please try again")
+        setAiLoading(false)
+      }
+    } catch (error) {
+      setAiLoading(false)
+      cogoToast.error("Please try again")
+    }
   }
 
   if (item.type === "input") {
@@ -236,14 +283,7 @@ const ProductInput = ({
           disabled={item?.isDisabled || previewOnly || false}
           helperText={item.error && item.helperText}
           value={state[item.id]}
-          onChange={(e) =>
-            stateHandler({
-              ...state,
-              [item.id]: item.isUperCase
-                ? e.target.value.toUpperCase()
-                : e.target.value
-            })
-          }
+          onChange={(e) => onChangeHandler(e, item)}
           inputProps={{
             maxLength: item.maxLength || undefined,
             minLength: item.minLength || undefined
@@ -251,6 +291,11 @@ const ProductInput = ({
           onFocus={() => handleFocus(item.id)}
           onBlur={handleBlur}
         />
+        {aiLoading && aiInput.title?.id === item.id && (
+          <>
+            <span className="loader"></span>
+          </>
+        )}
         {item.hasMicIcon && (
           <>
             <span className="mic-icon" onClick={openModal}>
@@ -365,7 +410,7 @@ const ProductInput = ({
                           ? " opacity-50 cursor-not-allowed"
                           : ""
                       }`}
-                      onClick={() => getProductTitle(item)}
+                      onClick={() => getInputTitle(item, selectLanguage.value)}
                     >
                       {!isLoading ? "Submit" : "Loading..."}
                     </button>
