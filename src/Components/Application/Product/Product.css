@@ -232,14 +232,22 @@
     height: 412px;
     flex-shrink: 0;
     border-radius: 5px;
-    border: 1px solid #E0E0E0;
     background: #F5F5F5;
+    outline: none !important;
     padding: 15px;
+}
+
+.text-body-modal textarea {
+    background: #F5F5F5;
+    width: 100%;
+    height: 100%;
+    outline: none !important;
 }
 
 .file-body-modal {
     display: flex;
     align-items: center;
+    padding: 15px;
     justify-content: center;
 }
 
@@ -251,12 +259,15 @@
     gap: 20px;
 }
 
-.text-body-modal span {
+.text-body-modal .response {
     color: #6C6C6C;
     font-size: 16px;
     font-style: normal;
     font-weight: 400;
     line-height: 22px;
+    display: block;
+    height: 100%;
+    overflow-y: auto;
     /* 137.5% */
 }
 
@@ -412,8 +423,8 @@
 
 .loader {
     position: absolute;
-    right: 40px;
-    top: 40px;
+    right: 30px;
+    top: 70px;
     width: 28px;
     height: 28px;
     border: 5px solid #007aff;

@@ -27,6 +27,9 @@ import DaysPicker from "react-multi-date-picker"
 import DatePanel from "react-multi-date-picker/plugins/date_panel"
 
 import MicIcon from "../../../Assets/Images/micIcon.svg"
+import CloseIcon from "../../../Assets/Images/closeIcon.svg"
+import WhiteMicIcon from "../../../Assets/Images/whiteMicIcon.svg"
+import voiceIcon from "../../../Assets/Images/voiceIcon.svg"
 import TextBodyModal from "./TextBodyModal"
 import UploadBodyModal from "./UploadBodyModal"
 import useCancellablePromise from "../../../Api/cancelRequest"
@@ -64,13 +67,11 @@ const ProductInput = ({
   const [languageList, setLanguageList] = useState([])
   const [selectLanguage, setSelectLanguage] = useState(defaultLanguage)
   const [aiInput, setAiInput] = useState({
-    title: "",
-    longDescription: "",
-    shortDescription: ""
+    id: "",
+    value: ""
   })
+  const [aiInputResponse, setAiInputResponse] = useState("")
   const [aiLoading, setAiLoading] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [transcript, setTranscript] = useState("")
   const [listening, setListening] = useState(false)
   const [open, setOpen] = useState(false)
   const [fetchedImageSize, setFetchedImageSize] = useState(0)
@@ -148,9 +149,13 @@ const ProductInput = ({
     }
   }, [isImageChanged, state[item.id]])
 
-  const handleStartListening = () => {
-    if (isLoading) return
-    setTranscript("")
+  const handleStartListening = (item) => {
+    if (aiLoading) return
+    setAiInputResponse("")
+    setAiInput({
+      id: "",
+      value: ""
+    })
     if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition
@@ -165,7 +170,12 @@ const ProductInput = ({
       recognition.onresult = (event) => {
         const last = event.results.length - 1
         const text = event.results[last][0].transcript
-        setTranscript((prevTranscript) => prevTranscript + " " + text)
+        setAiInput((prevTranscript) => {
+          return {
+            id: item.id,
+            value: `${prevTranscript.value} ${text}`
+          }
+        })
       }
 
       recognition.onend = () => {
@@ -181,19 +191,30 @@ const ProductInput = ({
 
   const closeModal = () => {
     setOpen(false)
-    setTranscript("")
     setSelectLanguage(defaultLanguage)
+    setAiInput({
+      id: "",
+      value: ""
+    })
+    setAiInputResponse("")
+    setAiLoading(false)
   }
 
   const getInputTitle = async (item, language) => {
-    if (transcript.length === 0) return
-    setIsLoading(true)
-    if (item.id === "productName") {
-      await getProductTitleAPI(transcript, item, language)
-    }
-    setIsLoading(false)
+    if (aiInputResponse.length === 0) return
+    stateHandler({
+      ...state,
+      [item.id]: item.isUperCase
+        ? aiInputResponse.toUpperCase()
+        : aiInputResponse
+    })
     setOpen(false)
-    setTranscript("")
+    setAiLoading(false)
+    setAiInput({
+      id: "",
+      value: ""
+    })
+    setAiInputResponse("")
   }
 
   const openModal = () => {
@@ -203,38 +224,49 @@ const ProductInput = ({
 
   useDebounce(() => getResponseFromAi(), 1000, [aiInput])
 
-  const onChangeHandler = (event, item) => {
+  const onChangeHandler = (value, item) => {
     stateHandler({
       ...state,
-      [item.id]: item.isUperCase
-        ? event.target.value.toUpperCase()
-        : event.target.value
+      [item.id]: item.isUperCase ? value.toUpperCase() : value
     })
-    if (item.id === "productName") {
-      setAiInput({
-        ...aiInput,
-        title: { ...item, value: event.target.value }
-      })
-    }
   }
 
   const getResponseFromAi = async () => {
     // For Title
-    if (aiInput.title?.value.length > 0) {
+    if (aiInput.id === "productName" && aiInput.value.length > 0) {
       const url = "https://genai.ondcsutr.com/languages/detect"
-      const body = [aiInput.title?.value]
+      const body = [aiInput.value]
       try {
         const langDetectResponse = await cancellablePromise(postCall(url, body))
         const lang = langDetectResponse?.results[0]?.detections[0]?.languageCode
         setAiLoading(true)
-        await getProductTitleAPI(aiInput.title?.value, aiInput.title, lang)
+        await getProductTitleAPI(aiInput.value, lang)
       } catch (e) {
+        setAiLoading(false)
+        cogoToast.error("Please try again")
+      }
+    }
+
+    //For Description
+    if (
+      (aiInput.id === "longDescription" || aiInput.id === "description") &&
+      aiInput.value.length > 0
+    ) {
+      const url = "https://genai.ondcsutr.com/languages/detect"
+      const body = [aiInput.value]
+      try {
+        const langDetectResponse = await cancellablePromise(postCall(url, body))
+        const lang = langDetectResponse?.results[0]?.detections[0]?.languageCode
+        setAiLoading(true)
+        await getDescriptionAPI(aiInput.value, lang)
+      } catch (e) {
+        setAiLoading(false)
         cogoToast.error("Please try again")
       }
     }
   }
 
-  const getProductTitleAPI = async (value, item, language) => {
+  const getProductTitleAPI = async (value, language) => {
     const url = "https://genai.ondcsutr.com/product/title/language"
     const body = {
       text: value,
@@ -246,12 +278,30 @@ const ProductInput = ({
     try {
       const response = await cancellablePromise(postCall(url, body))
       if (response?.results?.translatedContent) {
-        stateHandler({
-          ...state,
-          [item.id]: item.isUperCase
-            ? response.results.translatedContent.toUpperCase()
-            : response.results.translatedContent
-        })
+        setAiInputResponse(response.results.translatedContent)
+        setAiLoading(false)
+      } else {
+        cogoToast.error("Please try again")
+        setAiLoading(false)
+      }
+    } catch (error) {
+      setAiLoading(false)
+      cogoToast.error("Please try again")
+    }
+  }
+
+  const getDescriptionAPI = async (value, language) => {
+    const url = "https://genai.ondcsutr.com/product/desc/language"
+    const body = {
+      text: value,
+      language: language,
+      prompt:
+        "Context: Create a nice, detailed bulleted Description of the following product including all keywords and help improve listing quality index."
+    }
+    try {
+      const response = await cancellablePromise(postCall(url, body))
+      if (response?.results?.translatedContent) {
+        setAiInputResponse(response.results.translatedContent)
         setAiLoading(false)
       } else {
         cogoToast.error("Please try again")
@@ -283,7 +333,7 @@ const ProductInput = ({
           disabled={item?.isDisabled || previewOnly || false}
           helperText={item.error && item.helperText}
           value={state[item.id]}
-          onChange={(e) => onChangeHandler(e, item)}
+          onChange={(e) => onChangeHandler(e.target.value, item)}
           inputProps={{
             maxLength: item.maxLength || undefined,
             minLength: item.minLength || undefined
@@ -291,11 +341,6 @@ const ProductInput = ({
           onFocus={() => handleFocus(item.id)}
           onBlur={handleBlur}
         />
-        {aiLoading && aiInput.title?.id === item.id && (
-          <>
-            <span className="loader"></span>
-          </>
-        )}
         {item.hasMicIcon && (
           <>
             <span className="mic-icon" onClick={openModal}>
@@ -314,24 +359,17 @@ const ProductInput = ({
                     className="close-btn cursor-pointer"
                     onClick={closeModal}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <path
-                        d="M20.4988 3.50562C15.8304 -1.16854 8.16958 -1.16854 3.50125 3.50562C-1.16708 8.17978 -1.16708 15.8502 3.50125 20.5243C5.89526 22.9214 8.88778 24 12 24C15.1122 24 18.1047 22.8015 20.4988 20.5243C25.1671 15.8502 25.1671 8.17978 20.4988 3.50562ZM16.9077 15.4906C17.2668 15.8502 17.2668 16.5693 16.9077 16.9288C16.6683 17.1685 16.4289 17.1685 16.1895 17.1685C15.9501 17.1685 15.7107 17.0487 15.4713 16.9288L12 13.4532L8.52868 16.9288C8.28928 17.1685 8.04988 17.1685 7.81047 17.1685C7.57107 17.1685 7.33167 17.0487 7.09227 16.9288C6.73317 16.5693 6.73317 15.8502 7.09227 15.4906L10.5636 12.015L7.09227 8.53933C6.73317 8.17978 6.73317 7.46067 7.09227 7.10112C7.45137 6.74157 8.16958 6.74157 8.52868 7.10112L12 10.5768L15.4713 7.10112C15.8304 6.74157 16.5486 6.74157 16.9077 7.10112C17.2668 7.46067 17.2668 8.17978 16.9077 8.53933L13.4364 12.015L16.9077 15.4906Z"
-                        fill="#B5B5B5"
-                      />
-                    </svg>
+                    <img src={CloseIcon} alt="close-icon" />
                   </span>
                 </div>
                 <div className="modal-body">
                   <TextBodyModal
                     listening={listening}
-                    transcript={transcript}
+                    aiInput={aiInput}
+                    item={item}
+                    aiInputResponse={aiInputResponse}
+                    setAiInput={setAiInput}
+                    aiLoading={aiLoading}
                   />
                 </div>
                 <div className="modal-footer">
@@ -364,55 +402,26 @@ const ProductInput = ({
                     {!listening ? (
                       <button
                         className={`mic-button${
-                          isLoading ? " opacity-50 cursor-not-allowed" : ""
+                          aiLoading ? " opacity-50 cursor-not-allowed" : ""
                         }`}
-                        onClick={handleStartListening}
+                        onClick={() => handleStartListening(item)}
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <path
-                            d="M11.9999 16.615C13.2693 16.615 14.3556 16.1631 15.2594 15.2596C16.1631 14.3562 16.6149 13.2693 16.6149 12V4.61551C16.6149 3.34621 16.1634 2.25979 15.2594 1.35588C14.3556 0.45218 13.2693 0 11.9999 0C10.7306 0 9.64416 0.45218 8.7403 1.35588C7.8364 2.25964 7.38452 3.34621 7.38452 4.61551V12C7.38452 13.2692 7.8366 14.3562 8.7403 15.2596C9.64401 16.1631 10.7306 16.615 11.9999 16.615Z"
-                            fill="white"
-                          />
-                          <path
-                            d="M20.0333 9.50482C19.8511 9.3221 19.6343 9.23071 19.3843 9.23071C19.1345 9.23071 18.9182 9.3221 18.7353 9.50482C18.5528 9.68749 18.4614 9.9038 18.4614 10.1537V12C18.4614 13.7789 17.829 15.3004 16.5646 16.5648C15.3006 17.8293 13.7788 18.4615 11.9999 18.4615C10.2209 18.4615 8.69936 17.8293 7.43486 16.5648C6.17052 15.3008 5.53839 13.7789 5.53839 12V10.1537C5.53839 9.9038 5.44701 9.68749 5.26439 9.50482C5.08167 9.3221 4.86555 9.23071 4.61539 9.23071C4.36523 9.23071 4.14887 9.3221 3.96625 9.50482C3.78347 9.68749 3.69214 9.9038 3.69214 10.1537V12C3.69214 14.125 4.4014 15.9736 5.81952 17.5456C7.23769 19.1176 8.99009 20.0189 11.0768 20.2495V22.1536H7.3845C7.13449 22.1536 6.91817 22.2451 6.7355 22.4278C6.55278 22.6104 6.46139 22.8268 6.46139 23.0768C6.46139 23.3264 6.55278 23.5432 6.7355 23.7258C6.91817 23.9084 7.13449 24 7.3845 24H16.615C16.8649 24 17.0815 23.9084 17.264 23.7258C17.4469 23.5433 17.5383 23.3264 17.5383 23.0768C17.5383 22.8268 17.4469 22.6104 17.264 22.4278C17.0816 22.2451 16.865 22.1536 16.615 22.1536H12.9232V20.2495C15.0095 20.0189 16.7617 19.1176 18.18 17.5456C19.5984 15.9736 20.3078 14.125 20.3078 12V10.1537C20.3078 9.90386 20.2162 9.68769 20.0333 9.50482Z"
-                            fill="white"
-                          />
-                        </svg>
+                        <img src={WhiteMicIcon} alt="mic-icon" />
                       </button>
                     ) : (
                       <span className="mic-button">
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <g id="Swap me">
-                            <path
-                              id="Vector"
-                              d="M6 6C5.73478 6 5.48043 6.10536 5.29289 6.29289C5.10536 6.48043 5 6.73478 5 7V17C5 17.2652 5.10536 17.5196 5.29289 17.7071C5.48043 17.8946 5.73478 18 6 18C6.26522 18 6.51957 17.8946 6.70711 17.7071C6.89464 17.5196 7 17.2652 7 17V7C7 6.73478 6.89464 6.48043 6.70711 6.29289C6.51957 6.10536 6.26522 6 6 6ZM9 9C8.73478 9 8.48043 9.10536 8.29289 9.29289C8.10536 9.48043 8 9.73478 8 10V14C8 14.2652 8.10536 14.5196 8.29289 14.7071C8.48043 14.8946 8.73478 15 9 15C9.26522 15 9.51957 14.8946 9.70711 14.7071C9.89464 14.5196 10 14.2652 10 14V10C10 9.73478 9.89464 9.48043 9.70711 9.29289C9.51957 9.10536 9.26522 9 9 9ZM3 9C2.73478 9 2.48043 9.10536 2.29289 9.29289C2.10536 9.48043 2 9.73478 2 10V14C2 14.2652 2.10536 14.5196 2.29289 14.7071C2.48043 14.8946 2.73478 15 3 15C3.26522 15 3.51957 14.8946 3.70711 14.7071C3.89464 14.5196 4 14.2652 4 14V10C4 9.73478 3.89464 9.48043 3.70711 9.29289C3.51957 9.10536 3.26522 9 3 9ZM21 10C20.7348 10 20.4804 10.1054 20.2929 10.2929C20.1054 10.4804 20 10.7348 20 11V13C20 13.2652 20.1054 13.5196 20.2929 13.7071C20.4804 13.8946 20.7348 14 21 14C21.2652 14 21.5196 13.8946 21.7071 13.7071C21.8946 13.5196 22 13.2652 22 13V11C22 10.7348 21.8946 10.4804 21.7071 10.2929C21.5196 10.1054 21.2652 10 21 10ZM12 3C11.7348 3 11.4804 3.10536 11.2929 3.29289C11.1054 3.48043 11 3.73478 11 4V20C11 20.2652 11.1054 20.5196 11.2929 20.7071C11.4804 20.8946 11.7348 21 12 21C12.2652 21 12.5196 20.8946 12.7071 20.7071C12.8946 20.5196 13 20.2652 13 20V4C13 3.73478 12.8946 3.48043 12.7071 3.29289C12.5196 3.10536 12.2652 3 12 3ZM18 6C17.7348 6 17.4804 6.10536 17.2929 6.29289C17.1054 6.48043 17 6.73478 17 7V17C17 17.2652 17.1054 17.5196 17.2929 17.7071C17.4804 17.8946 17.7348 18 18 18C18.2652 18 18.5196 17.8946 18.7071 17.7071C18.8946 17.5196 19 17.2652 19 17V7C19 6.73478 18.8946 6.48043 18.7071 6.29289C18.5196 6.10536 18.2652 6 18 6ZM15 8C14.7348 8 14.4804 8.10536 14.2929 8.29289C14.1054 8.48043 14 8.73478 14 9V15C14 15.2652 14.1054 15.5196 14.2929 15.7071C14.4804 15.8946 14.7348 16 15 16C15.2652 16 15.5196 15.8946 15.7071 15.7071C15.8946 15.5196 16 15.2652 16 15V9C16 8.73478 15.8946 8.48043 15.7071 8.29289C15.5196 8.10536 15.2652 8 15 8Z"
-                              fill="white"
-                            />
-                          </g>
-                        </svg>
+                        <img src={voiceIcon} alt="voice-icon" />
                       </span>
                     )}
                     <button
                       className={`sbt-button${
-                        transcript.length === 0
+                        aiInputResponse.length === 0
                           ? " opacity-50 cursor-not-allowed"
                           : ""
                       }`}
-                      onClick={() => getInputTitle(item, selectLanguage.value)}
+                      onClick={() => getInputTitle(item)}
                     >
-                      {!isLoading ? "Submit" : "Loading..."}
+                      {!aiLoading ? "Submit" : "Loading..."}
                     </button>
                   </div>
                 </div>

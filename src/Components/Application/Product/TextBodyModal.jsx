@@ -2,17 +2,43 @@ import React from "react"
 
 import Loader from "../../../Assets/Images/loaderSpiner.svg"
 
-const TextBodyModal = ({ listening, transcript }) => {
+const TextBodyModal = ({
+  listening,
+  aiInput,
+  setAiInput,
+  item,
+  aiInputResponse,
+  aiLoading
+}) => {
+  const changeHandler = (event) => {
+    setAiInput({
+      id: item.id,
+      value: event.target.value
+    })
+  }
+
   return (
     <div className="text-body-modal">
-      {!listening && transcript.length === 0 ? (
-        <span>For Speech to Text please press the Mic icon</span>
+      {!listening && aiInputResponse.length === 0 ? (
+        <>
+          <textarea
+            placeholder="Text or Speech"
+            value={aiInput.value}
+            onChange={changeHandler}
+            disabled={aiLoading}
+          ></textarea>
+          {aiLoading && (
+            <>
+              <span className="loader"></span>
+            </>
+          )}
+        </>
       ) : (
         <>
-          {transcript.length === 0 ? (
+          {listening ? (
             <img src={Loader} alt="loader" width="80" className="chat-loader" />
           ) : (
-            <span className="text-black">{transcript}</span>
+            <div className="response text-black">{aiInputResponse}</div>
           )}
         </>
       )}
