@@ -180,13 +180,22 @@ const productFields = [
     class: 'md:col-span-2 col-span-6'
   },
   {
+    id: "divider",
+    class: "col-span-6",
+    type: "divider",
+  },
+  {
+    id: "attributes",
+    class: "col-span-6",
+    type: "attributes",
+  },
+  {
     id: "packQty",
     title: "Measurement Quantity",
     placeholder: "Measurement Quantity",
     type: "input",
     required: true,
     class: 'md:col-span-2 col-span-6',
-    hasMicIcon: true,
   },
   {
     id: "length",
@@ -196,7 +205,6 @@ const productFields = [
     maxLength: 6,
     required: true,
     class: 'md:col-span-2 col-span-6',
-    hasMicIcon: true,
   },
   {
     id: "breadth",
@@ -206,7 +214,6 @@ const productFields = [
     maxLength: 6,
     required: true,
     class: 'md:col-span-2 col-span-6',
-    hasMicIcon: true,
   },
   {
     id: "height",
@@ -216,7 +223,6 @@ const productFields = [
     maxLength: 6,
     required: true,
     class: 'md:col-span-2 col-span-6',
-    hasMicIcon: true,
   },
   {
     id: "weight",
@@ -226,7 +232,11 @@ const productFields = [
     maxLength: 3,
     required: true,
     class: 'md:col-span-2 col-span-6',
-    hasMicIcon: true,
+  },
+  {
+    id: "divider",
+    class: "col-span-6",
+    type: "divider",
   },
   {
     id: "returnWindow",

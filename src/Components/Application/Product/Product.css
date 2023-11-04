@@ -435,6 +435,40 @@
     animation: rotation 1s linear infinite;
 }
 
+.attributes-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.attributes-heading .title {
+    color: #000;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.attributes-heading .actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.attributes-heading .actions .select-lang {
+    width: 140px;
+}
+
+.attributes-heading .mic-button {
+    width: 44px;
+    height: 44px;
+}
+
+.attributes-heading .mic-button img {
+    width: 17px;
+}
+
+
 @keyframes rotation {
     0% {
         transform: rotate(0deg);
