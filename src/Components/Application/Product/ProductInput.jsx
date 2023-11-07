@@ -34,6 +34,8 @@ import TextBodyModal from "./TextBodyModal"
 import UploadBodyModal from "./UploadBodyModal"
 import useCancellablePromise from "../../../Api/cancelRequest"
 import useDebounce from "../../../hooks/useDebounce"
+import axios from "axios"
+import { extractKeyValuePairs } from "../../../utils/formatting/string"
 
 const CssTextField = styled(TextField)({
   "& .MuiOutlinedInput-root": {
@@ -258,11 +260,36 @@ const ProductInput = ({
         const langDetectResponse = await cancellablePromise(postCall(url, body))
         const lang = langDetectResponse?.results[0]?.detections[0]?.languageCode
         setAiLoading(true)
-        await getDescriptionAPI(aiInput.value, lang)
+        await getDescriptionAPI(aiInput.value, lang, aiInput.id)
       } catch (e) {
         setAiLoading(false)
         cogoToast.error("Please try again")
       }
+    }
+
+    //For Image upload
+    if (aiInput.id === "images" && aiInput.value.length > 0) {
+      const url = "https://genai.ondcsutr.com/languages/detect"
+      const body = [aiInput.value]
+      try {
+        const langDetectResponse = await cancellablePromise(postCall(url, body))
+        const lang = langDetectResponse?.results[0]?.detections[0]?.languageCode
+        setAiLoading(true)
+        await getImageAPI(aiInput.value, lang)
+      } catch (e) {
+        setAiLoading(false)
+        cogoToast.error("Please try again")
+      }
+    }
+
+    //For Product Attribute
+    if (aiInput.id === "attributes" && aiInput.value.length > 0) {
+      console.log(
+        "🚀 ~ file: ProductInput.jsx:286 ~ getResponseFromAi ~ aiInput:",
+        aiInput
+      )
+      setAiLoading(true)
+      await getProductInputAPI(aiInput.value)
     }
   }
 
@@ -290,18 +317,112 @@ const ProductInput = ({
     }
   }
 
-  const getDescriptionAPI = async (value, language) => {
+  const getDescriptionAPI = async (value, language, desc) => {
     const url = "https://genai.ondcsutr.com/product/desc/language"
     const body = {
       text: value,
       language: language,
-      prompt:
-        "Context: Create a nice, detailed bulleted Description of the following product including all keywords and help improve listing quality index."
+      prompt: `Context: Create a nice,${
+        desc !== "longDescription" ? " short 2-3 points" : ""
+      } detailed bulleted Description of the following product including all keywords and help improve listing quality index.`
     }
     try {
       const response = await cancellablePromise(postCall(url, body))
       if (response?.results?.translatedContent) {
         setAiInputResponse(response.results.translatedContent)
+        setAiLoading(false)
+      } else {
+        cogoToast.error("Please try again")
+        setAiLoading(false)
+      }
+    } catch (error) {
+      setAiLoading(false)
+      cogoToast.error("Please try again")
+    }
+  }
+
+  const getImageAPI = async (value, language) => {
+    const body = JSON.stringify({
+      text: value,
+      language,
+      prompt: "Context: Generate images of the following Products",
+      gcsbucket: "gen-ai-399709-stg"
+    })
+    const config = {
+      method: "post",
+      url: "https://genai.ondcsutr.com/product/image/gen/language",
+      headers: {
+        samplecount: "1",
+        "Content-Type": "application/json"
+      },
+      data: body
+    }
+
+    try {
+      const response = await axios(config)
+      if (response?.data.results[0]?.signedUri) {
+        setAiInputResponse(response?.data.results[0]?.signedUri)
+        setAiLoading(false)
+      } else {
+        cogoToast.error("Please try again")
+        setAiLoading(false)
+      }
+    } catch (error) {
+      console.log(
+        "🚀 ~ file: ProductInput.jsx:353 ~ getImageAPI ~ error:",
+        error
+      )
+      setAiLoading(false)
+      cogoToast.error("Please try again")
+    }
+  }
+
+  const getProductInputAPI = async (value) => {
+    const body = JSON.stringify({
+      attributes: value,
+      prompt:
+        "Context: Create a set of attributes from the following description for creating a Product catalogue",
+      desc: 'Example: {"Measurement Quantity": "Kilogram", "meter", "Length": "10", "20", , "Breadth": "10", "20", "Height": "10", "20", "Weight": "10", "20", "Vegetarian": "Yes", "No" "category": "Fabric", {"size": ["L"}}'
+    })
+    const config = {
+      method: "post",
+      url: "https://genai.ondcsutr.com/product/attribs",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      data: body
+    }
+    try {
+      const response = await axios(config)
+      if (response?.data.results?.content) {
+        setAiInputResponse(response?.data.results?.content)
+
+        const contentString = response?.data.results?.content
+        if (contentString) {
+          const responseData = extractKeyValuePairs(contentString)
+          if (responseData) {
+            stateHandler({
+              ...state,
+              ["packQty"]: responseData["Measurement Quantity"],
+              ["length"]: responseData["Length"],
+              ["breadth"]: responseData["Breadth"],
+              ["height"]: responseData["Height"],
+              ["weight"]: responseData["Weight"]
+            })
+          } else {
+            cogoToast.error("Please try again")
+          }
+        } else {
+          cogoToast.error("Please try again")
+        }
+
+        setOpen(false)
+        setSelectLanguage(defaultLanguage)
+        setAiInput({
+          id: "",
+          value: ""
+        })
+        setAiInputResponse("")
         setAiLoading(false)
       } else {
         cogoToast.error("Please try again")
@@ -634,48 +755,91 @@ const ProductInput = ({
       <div className={`${item.class}`}>
         <div className="attributes-heading">
           <div className="title">Attributes</div>
-          <div className="actions">
-            <div className="select-lang">
-              <Autocomplete
-                size="small"
-                options={languageList}
-                getOptionLabel={(option) => option.key}
-                value={selectLanguage}
-                isOptionEqualToValue={(option, value) =>
-                  option.key === value.key
-                }
-                disableClearable={true}
-                onChange={(event, newValue) => {
-                  setSelectLanguage(newValue)
-                }}
-                className="text-input"
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder={"Select your language"}
-                    variant="outlined"
-                    error={item.error || false}
-                    helperText={item.error && item.helperText}
+          <div className="actions relative">
+            <span className="mic-icon" onClick={openModal}>
+              <img src={MicIcon} alt="" />
+            </span>
+            <Modal
+              open={open}
+              keepMounted
+              //   onClose={() => setOpen(false)}
+              aria-labelledby="modal-modal-title"
+              aria-describedby="modal-modal-description"
+            >
+              <div className="speech-modal">
+                <div className="modal-header">
+                  <span
+                    className="close-btn cursor-pointer"
+                    onClick={closeModal}
+                  >
+                    <img src={CloseIcon} alt="close-icon" />
+                  </span>
+                </div>
+                <div className="modal-body">
+                  <TextBodyModal
+                    listening={listening}
+                    aiInput={aiInput}
+                    item={item}
+                    aiInputResponse={aiInputResponse}
+                    setAiInput={setAiInput}
+                    aiLoading={aiLoading}
                   />
-                )}
-              />
-            </div>
-            <div className="icon-mic">
-              {!listening ? (
-                <button
-                  className={`mic-button${
-                    aiLoading ? " opacity-50 cursor-not-allowed" : ""
-                  }`}
-                  onClick={() => handleStartListening(item)}
-                >
-                  <img src={WhiteMicIcon} alt="mic-icon" />
-                </button>
-              ) : (
-                <span className="mic-button">
-                  <img src={voiceIcon} alt="voice-icon" />
-                </span>
-              )}
-            </div>
+                </div>
+                <div className="modal-footer">
+                  <div className="btn-group">
+                    <div className="lang-select">
+                      <Autocomplete
+                        size="small"
+                        options={languageList}
+                        getOptionLabel={(option) => option.key}
+                        value={selectLanguage}
+                        isOptionEqualToValue={(option, value) =>
+                          option.key === value.key
+                        }
+                        disableClearable={true}
+                        onChange={(event, newValue) => {
+                          setSelectLanguage(newValue)
+                        }}
+                        className="text-input"
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            placeholder={"Select your language"}
+                            variant="outlined"
+                            error={item.error || false}
+                            helperText={item.error && item.helperText}
+                          />
+                        )}
+                      />
+                    </div>
+                    {!listening ? (
+                      <button
+                        className={`mic-button${
+                          aiLoading ? " opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        onClick={() => handleStartListening(item)}
+                      >
+                        <img src={WhiteMicIcon} alt="mic-icon" />
+                      </button>
+                    ) : (
+                      <span className="mic-button">
+                        <img src={voiceIcon} alt="voice-icon" />
+                      </span>
+                    )}
+                    <button
+                      className={`sbt-button${
+                        aiInputResponse.length === 0
+                          ? " opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                      onClick={() => getInputTitle(item)}
+                    >
+                      {!aiLoading ? "Submit" : "Loading..."}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Modal>
           </div>
         </div>
       </div>
@@ -1167,7 +1331,7 @@ const ProductInput = ({
     }
 
     return (
-      <div className={`${item.class}`}>
+      <div className={`${item.class} relative`}>
         <label
           htmlFor="contained-button-file"
           className="text-sm py-2 ml-1 font-medium text-left text-[#606161] inline-block"
@@ -1185,6 +1349,94 @@ const ProductInput = ({
           Multiple file selection allowed, Maximum size of 2MB for each file{" "}
           <span className="text-[#FF0000]"> *</span>
         </p>
+        {item.hasMicIcon && (
+          <>
+            <span className="mic-icon upload-image" onClick={openModal}>
+              <img src={MicIcon} alt="" />
+            </span>
+            <Modal
+              open={open}
+              keepMounted
+              //   onClose={() => setOpen(false)}
+              aria-labelledby="modal-modal-title"
+              aria-describedby="modal-modal-description"
+            >
+              <div className="speech-modal">
+                <div className="modal-header">
+                  <span
+                    className="close-btn cursor-pointer"
+                    onClick={closeModal}
+                  >
+                    <img src={CloseIcon} alt="close-icon" />
+                  </span>
+                </div>
+                <div className="modal-body">
+                  <TextBodyModal
+                    listening={listening}
+                    aiInput={aiInput}
+                    item={item}
+                    aiInputResponse={aiInputResponse}
+                    setAiInput={setAiInput}
+                    aiLoading={aiLoading}
+                  />
+                </div>
+                <div className="modal-footer">
+                  <div className="btn-group">
+                    <div className="lang-select">
+                      <Autocomplete
+                        size="small"
+                        options={languageList}
+                        getOptionLabel={(option) => option.key}
+                        value={selectLanguage}
+                        isOptionEqualToValue={(option, value) =>
+                          option.key === value.key
+                        }
+                        disableClearable={true}
+                        onChange={(event, newValue) => {
+                          setSelectLanguage(newValue)
+                        }}
+                        className="text-input"
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            placeholder={"Select your language"}
+                            variant="outlined"
+                            error={item.error || false}
+                            helperText={item.error && item.helperText}
+                          />
+                        )}
+                      />
+                    </div>
+                    {!listening ? (
+                      <button
+                        className={`mic-button${
+                          aiLoading ? " opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        onClick={() => handleStartListening(item)}
+                      >
+                        <img src={WhiteMicIcon} alt="mic-icon" />
+                      </button>
+                    ) : (
+                      <span className="mic-button">
+                        <img src={voiceIcon} alt="voice-icon" />
+                      </span>
+                    )}
+                    <button
+                      className={`sbt-button${
+                        aiInputResponse.length === 0
+                          ? " opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                      onClick={() => getInputTitle(item)}
+                    >
+                      {!aiLoading ? "Submit" : "Loading..."}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Modal>
+          </>
+        )}
         <Modal
           open={open}
           keepMounted
@@ -1199,7 +1451,14 @@ const ProductInput = ({
               </span>
             </div>
             <div className="modal-body">
-              <UploadBodyModal />
+              <TextBodyModal
+                listening={listening}
+                aiInput={aiInput}
+                item={item}
+                aiInputResponse={aiInputResponse}
+                setAiInput={setAiInput}
+                aiLoading={aiLoading}
+              />
             </div>
             <div className="modal-footer">
               <div className="btn-group">

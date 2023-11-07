@@ -21,8 +21,14 @@
 }
 
 .divider {
-    margin: 15px 0;
+    margin: 15px 0 0 0;
 }
+
+.divider hr {
+    border-color: #D9D9D9 !important;
+    border-top-width: 2px !important;
+}
+
 
 .date-input .MuiInputBase-root {
     height: 40px !important;
@@ -213,6 +219,10 @@
     background: #fff;
 }
 
+.mic-icon.upload-image {
+    background: transparent !important;
+}
+
 .mic-icon img {
     width: 18px;
     height: 18px;
@@ -242,6 +252,7 @@
     width: 100%;
     height: 100%;
     outline: none !important;
+    resize: none;
 }
 
 .file-body-modal {
@@ -453,21 +464,21 @@
     display: flex;
     align-items: center;
     gap: 20px;
+    width: 100%;
 }
 
-.attributes-heading .actions .select-lang {
-    width: 140px;
+.attributes-heading .actions .mic-icon {
+    position: absolute;
+    top: 0;
+    right: 11px;
+    cursor: pointer;
+    background: unset;
 }
 
-.attributes-heading .mic-button {
-    width: 44px;
-    height: 44px;
+.attributes-heading .actions .mic-icon img {
+    width: 25px;
+    height: 25px;
 }
-
-.attributes-heading .mic-button img {
-    width: 17px;
-}
-
 
 @keyframes rotation {
     0% {

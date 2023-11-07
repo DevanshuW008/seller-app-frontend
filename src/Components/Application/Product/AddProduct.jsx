@@ -558,7 +558,7 @@ export default function AddProduct() {
           <label className="ml-2 md:mb-4 md:mt-3 mt-2 font-semibold text-xl">
             {state?.productId === undefined ? "Add Product" : "Update Product"}
           </label>
-          <div className="divider">
+          <div className="divider mb-4">
             <hr />
           </div>
           <form>

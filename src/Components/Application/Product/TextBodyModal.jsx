@@ -38,7 +38,17 @@ const TextBodyModal = ({
           {listening ? (
             <img src={Loader} alt="loader" width="80" className="chat-loader" />
           ) : (
-            <div className="response text-black">{aiInputResponse}</div>
+            <>
+              {item.id !== "images" ? (
+                <div className="response text-black">{aiInputResponse}</div>
+              ) : (
+                <img
+                  src={aiInputResponse}
+                  className="w-full h-full"
+                  alt="image-pic"
+                />
+              )}
+            </>
           )}
         </>
       )}

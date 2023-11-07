@@ -361,7 +361,8 @@ const productFields = [
     multiple: true,
     file_type: "product_image",
     required: true,
-    class: 'col-span-6'
+    class: 'col-span-6',
+    hasMicIcon: true,
   },
 ];
 
