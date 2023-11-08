@@ -10,7 +10,8 @@ import {
   TextField,
   Stack,
   Chip,
-  Modal
+  Modal,
+  FormHelperText
 } from "@mui/material"
 import { DeleteOutlined } from "@mui/icons-material"
 import cogoToast from "cogo-toast"
@@ -36,6 +37,7 @@ import useCancellablePromise from "../../../Api/cancelRequest"
 import useDebounce from "../../../hooks/useDebounce"
 import axios from "axios"
 import { extractKeyValuePairs } from "../../../utils/formatting/string"
+import Cookies from "js-cookie"
 
 const CssTextField = styled(TextField)({
   "& .MuiOutlinedInput-root": {
@@ -66,6 +68,8 @@ const ProductInput = ({
 }) => {
   const uploadFileRef = useRef(null)
   const [isImageChanged, setIsImageChanged] = useState(false)
+  const [isImageEdit, setIsImageEdit] = useState(false)
+  const [editImageInputValue, setEditImageInputValue] = useState("")
   const [languageList, setLanguageList] = useState([])
   const [selectLanguage, setSelectLanguage] = useState(defaultLanguage)
   const [aiInput, setAiInput] = useState({
@@ -153,7 +157,9 @@ const ProductInput = ({
 
   const handleStartListening = (item) => {
     if (aiLoading) return
-    setAiInputResponse("")
+    if (!isImageEdit) {
+      setAiInputResponse("")
+    }
     setAiInput({
       id: "",
       value: ""
@@ -172,12 +178,18 @@ const ProductInput = ({
       recognition.onresult = (event) => {
         const last = event.results.length - 1
         const text = event.results[last][0].transcript
-        setAiInput((prevTranscript) => {
-          return {
-            id: item.id,
-            value: `${prevTranscript.value} ${text}`
-          }
-        })
+        if (!isImageEdit) {
+          setAiInput((prevTranscript) => {
+            return {
+              id: item.id,
+              value: `${prevTranscript.value} ${text}`
+            }
+          })
+        } else {
+          setEditImageInputValue((prevTranscript) => {
+            return `${prevTranscript} ${text}`
+          })
+        }
       }
 
       recognition.onend = () => {
@@ -225,6 +237,7 @@ const ProductInput = ({
   }
 
   useDebounce(() => getResponseFromAi(), 1000, [aiInput])
+  useDebounce(() => editImageAPI(), 1000, [editImageInputValue])
 
   const onChangeHandler = (value, item) => {
     stateHandler({
@@ -361,7 +374,10 @@ const ProductInput = ({
     try {
       const response = await axios(config)
       if (response?.data.results[0]?.signedUri) {
-        setAiInputResponse(response?.data.results[0]?.signedUri)
+        setAiInputResponse({
+          imageName: response?.data.results[0]?.fileName,
+          url: response?.data.results[0]?.signedUri
+        })
         setAiLoading(false)
       } else {
         cogoToast.error("Please try again")
@@ -423,6 +439,68 @@ const ProductInput = ({
           value: ""
         })
         setAiInputResponse("")
+        setAiLoading(false)
+      } else {
+        cogoToast.error("Please try again")
+        setAiLoading(false)
+      }
+    } catch (error) {
+      setAiLoading(false)
+      cogoToast.error("Please try again")
+    }
+  }
+
+  const removeImage = () => {
+    setAiInputResponse("")
+    setAiInput({
+      ...aiInput,
+      value: ""
+    })
+  }
+
+  const editImage = () => {
+    setIsImageEdit(true)
+  }
+
+  const editImageAPI = async () => {
+    if (editImageInputValue.length === 0) return
+    const url = "https://genai.ondcsutr.com/languages/detect"
+    const body = [editImageInputValue]
+    try {
+      const langDetectResponse = await cancellablePromise(postCall(url, body))
+      const lang = langDetectResponse?.results[0]?.detections[0]?.languageCode
+      setAiLoading(true)
+      await getEditedImageAI(editImageInputValue, lang)
+    } catch (e) {
+      setAiLoading(false)
+      cogoToast.error("Please try again")
+    }
+  }
+
+  const getEditedImageAI = async (value, lang) => {
+    const body = JSON.stringify({
+      text: value,
+      language: lang,
+      prompt: "Context: Edit the image as the following:",
+      gcsbucket: "gen-ai-399709-stg",
+      filename: aiInputResponse.imageName
+    })
+    const config = {
+      method: "post",
+      url: "https://genai.ondcsutr.com/product/image/edit/language",
+      headers: {
+        samplecount: "1",
+        "Content-Type": "application/json"
+      },
+      data: body
+    }
+    try {
+      const response = await axios(config)
+      if (response?.data.results[0]?.signedUri) {
+        setAiInputResponse({
+          imageName: response?.data.results[0]?.fileName,
+          url: response?.data.results[0]?.signedUri
+        })
         setAiLoading(false)
       } else {
         cogoToast.error("Please try again")
@@ -1341,9 +1419,12 @@ const ProductInput = ({
         </label>
         <div style={{ display: "flex" }}>{renderUploadedUrls()}</div>
         <div className="file-input-box">
-          <button type="button" onClick={() => setOpen(true)}>
+          {/* <button type="button" onClick={() => setOpen(true)}>
             Choose Files
-          </button>
+          </button> */}
+          <div className="upload-btn">
+            <input type="file" />
+          </div>
         </div>
         <p className="note">
           Multiple file selection allowed, Maximum size of 2MB for each file{" "}
@@ -1458,6 +1539,11 @@ const ProductInput = ({
                 aiInputResponse={aiInputResponse}
                 setAiInput={setAiInput}
                 aiLoading={aiLoading}
+                removeImage={removeImage}
+                editImage={editImage}
+                isImageEdit={isImageEdit}
+                setEditImageInputValue={setEditImageInputValue}
+                editImageInputValue={editImageInputValue}
               />
             </div>
             <div className="modal-footer">

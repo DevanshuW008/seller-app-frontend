@@ -1,6 +1,8 @@
 import React from "react"
 
 import Loader from "../../../Assets/Images/loaderSpiner.svg"
+import DeleteIcon from "../../../Assets/Images/deleteIcon.svg"
+import EditIcon from "../../../Assets/Images/editImage.svg"
 
 const TextBodyModal = ({
   listening,
@@ -8,7 +10,12 @@ const TextBodyModal = ({
   setAiInput,
   item,
   aiInputResponse,
-  aiLoading
+  aiLoading,
+  removeImage,
+  editImage,
+  isImageEdit,
+  editImageInputValue,
+  setEditImageInputValue
 }) => {
   const changeHandler = (event) => {
     setAiInput({
@@ -19,39 +26,98 @@ const TextBodyModal = ({
 
   return (
     <div className="text-body-modal">
-      {!listening && aiInputResponse.length === 0 ? (
-        <>
-          <textarea
-            placeholder="Text or Speech"
-            value={aiInput.value}
-            onChange={changeHandler}
-            disabled={aiLoading}
-          ></textarea>
-          {aiLoading && (
-            <>
-              <span className="loader"></span>
-            </>
-          )}
-        </>
-      ) : (
-        <>
-          {listening ? (
-            <img src={Loader} alt="loader" width="80" className="chat-loader" />
-          ) : (
-            <>
-              {item.id !== "images" ? (
-                <div className="response text-black">{aiInputResponse}</div>
-              ) : (
-                <img
-                  src={aiInputResponse}
-                  className="w-full h-full"
-                  alt="image-pic"
-                />
-              )}
-            </>
-          )}
-        </>
-      )}
+      <>
+        {!isImageEdit ? (
+          <>
+            {!listening && aiInputResponse.length === 0 ? (
+              <>
+                <textarea
+                  placeholder="Text or Speech"
+                  value={aiInput.value}
+                  onChange={changeHandler}
+                  disabled={aiLoading}
+                ></textarea>
+                {aiLoading && (
+                  <>
+                    <span className="loader"></span>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                {listening ? (
+                  <img
+                    src={Loader}
+                    alt="loader"
+                    width="80"
+                    className="chat-loader"
+                  />
+                ) : (
+                  <>
+                    {item.id !== "images" ? (
+                      <div className="response text-black">
+                        {aiInputResponse}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="show-image">
+                          <img
+                            src={aiInputResponse.url}
+                            alt=""
+                            className="w-full h-full"
+                          />
+                          <div className="remove-button" onClick={removeImage}>
+                            <img src={DeleteIcon} alt="delete icon" />
+                          </div>
+                          <div className="edit-button" onClick={editImage}>
+                            <img src={EditIcon} alt="edit icon" />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="edit-image">
+              <img
+                src={aiInputResponse.url}
+                className="response-image"
+                alt=""
+              />
+              <div className="edit-textarea">
+                {aiLoading && (
+                  <>
+                    <span className="loader"></span>
+                  </>
+                )}
+                {listening ? (
+                  <div className="edit-loader">
+                    <img
+                      src={Loader}
+                      alt="loader"
+                      width="80"
+                      className="chat-loader"
+                    />
+                  </div>
+                ) : (
+                  <textarea
+                    placeholder="Text or Speech"
+                    value={editImageInputValue}
+                    onChange={(event) =>
+                      setEditImageInputValue(event.target.value)
+                    }
+                    disabled={aiLoading}
+                  ></textarea>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </>
     </div>
   )
 }
