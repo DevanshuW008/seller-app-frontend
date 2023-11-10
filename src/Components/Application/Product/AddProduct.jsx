@@ -338,8 +338,6 @@ export default function AddProduct() {
         : ""
     formErrors.packQty = !formValues?.packQty
       ? "Please enter a valid Measurement Quantity"
-      : !isNumberOnly(formValues?.packQty)
-      ? "Please enter only digit"
       : ""
     formErrors.length =
       formValues?.length?.trim() === ""
@@ -486,8 +484,10 @@ export default function AddProduct() {
   }
 
   const handleSubmit = () => {
+    console.log("Submit", validate())
     setFormSubmited(true)
     if (validate()) {
+      console.log("Submiting...")
       state?.productId ? updateProduct() : addProduct()
     }
   }
@@ -563,7 +563,7 @@ export default function AddProduct() {
           </div>
           <form>
             <div className="grid grid-cols-6 gap-4">{renderFields()}</div>
-            <div className="divider">
+            <div className="divider mb-4">
               <hr />
             </div>
             <div className="flex flex-row justify-start">

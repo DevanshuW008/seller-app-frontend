@@ -78,10 +78,41 @@ const ProductInput = ({
   })
   const [aiInputResponse, setAiInputResponse] = useState("")
   const [aiLoading, setAiLoading] = useState(false)
+  const [fileLoading, setFileLoading] = useState([])
   const [listening, setListening] = useState(false)
   const [open, setOpen] = useState(false)
   const [fetchedImageSize, setFetchedImageSize] = useState(0)
   const { cancellablePromise } = useCancellablePromise()
+
+  const [selectedFiles, setSelectedFiles] = useState([])
+
+  const handleFileChange = async (e, item) => {
+    const files = Array.from(e.target.files)
+    setFileLoading(files)
+    const formData = new FormData()
+    for (const file of files) {
+      formData.append("images", file)
+    }
+    try {
+      const url = `/api/v1/gcp-upload`
+      const res = await postCall(url, formData)
+      setSelectedFiles((prevSelectedFiles) => {
+        return [...prevSelectedFiles, ...res.urls] // Append the new URLs to the existing array
+      })
+
+      stateHandler((prevState) => {
+        const newState = {
+          ...prevState,
+          [item.id]: [...(prevState[item.id] || []), ...res.urls]
+        }
+        return newState
+      })
+      setFileLoading([])
+    } catch (error) {
+      setFileLoading([])
+      cogoToast.error("Please try again")
+    }
+  }
 
   useEffect(() => {
     getLanguageList()
@@ -212,6 +243,8 @@ const ProductInput = ({
     })
     setAiInputResponse("")
     setAiLoading(false)
+    setIsImageEdit(false)
+    setEditImageInputValue("")
   }
 
   const getInputTitle = async (item, language) => {
@@ -469,7 +502,6 @@ const ProductInput = ({
     try {
       const langDetectResponse = await cancellablePromise(postCall(url, body))
       const lang = langDetectResponse?.results[0]?.detections[0]?.languageCode
-      setAiLoading(true)
       await getEditedImageAI(editImageInputValue, lang)
     } catch (e) {
       setAiLoading(false)
@@ -478,38 +510,81 @@ const ProductInput = ({
   }
 
   const getEditedImageAI = async (value, lang) => {
-    const body = JSON.stringify({
-      text: value,
-      language: lang,
-      prompt: "Context: Edit the image as the following:",
-      gcsbucket: "gen-ai-399709-stg",
-      filename: aiInputResponse.imageName
-    })
-    const config = {
-      method: "post",
-      url: "https://genai.ondcsutr.com/product/image/edit/language",
-      headers: {
-        samplecount: "1",
-        "Content-Type": "application/json"
-      },
-      data: body
-    }
-    try {
-      const response = await axios(config)
-      if (response?.data.results[0]?.signedUri) {
-        setAiInputResponse({
-          imageName: response?.data.results[0]?.fileName,
-          url: response?.data.results[0]?.signedUri
-        })
-        setAiLoading(false)
-      } else {
-        cogoToast.error("Please try again")
-        setAiLoading(false)
+    if (value.length > 0) {
+      setAiLoading(true)
+      const body = JSON.stringify({
+        text: value,
+        language: lang,
+        prompt: "Context: Edit the image as the following:",
+        gcsbucket: "gen-ai-399709-stg",
+        filename: aiInputResponse.imageName
+      })
+      const config = {
+        method: "post",
+        url: "https://genai.ondcsutr.com/product/image/edit/language",
+        headers: {
+          samplecount: "1",
+          "Content-Type": "application/json"
+        },
+        data: body
       }
-    } catch (error) {
-      setAiLoading(false)
-      cogoToast.error("Please try again")
+      try {
+        const response = await axios(config)
+        if (response?.data.results[0]?.signedUri) {
+          setAiInputResponse({
+            imageName: response?.data.results[0]?.fileName,
+            url: response?.data.results[0]?.signedUri
+          })
+          setAiLoading(false)
+        } else {
+          cogoToast.error("Please try again")
+          setAiLoading(false)
+        }
+      } catch (error) {
+        setAiLoading(false)
+        cogoToast.error("Please try again")
+      }
     }
+  }
+
+  const removePreviewImage = (e, images, item) => {
+    const imagesData = selectedFiles.filter((file) => file.name !== images.name)
+    setSelectedFiles(imagesData)
+    stateHandler((prevState) => {
+      const newState = {
+        ...prevState,
+        [item.id]: imagesData
+      }
+      return newState
+    })
+  }
+
+  const fileUpload = (data, item) => {
+    if (aiLoading) return
+    setSelectedFiles((prevSelectedFiles) => {
+      return [...prevSelectedFiles, { url: data.url, name: data.imageName }] // Append the new URLs to the existing array
+    })
+
+    stateHandler((prevState) => {
+      const newState = {
+        ...prevState,
+        [item.id]: [
+          ...(prevState[item.id] || []),
+          { url: data.url, name: data.imageName }
+        ]
+      }
+      return newState
+    })
+
+    setOpen(false)
+    setAiLoading(false)
+    setAiInput({
+      id: "",
+      value: ""
+    })
+    setAiInputResponse("")
+    setIsImageEdit(false)
+    setEditImageInputValue(false)
   }
 
   if (item.type === "input") {
@@ -1075,6 +1150,14 @@ const ProductInput = ({
             }}
           />
         </LocalizationProvider>
+        {item.error && (
+          <p
+            class="MuiFormHelperText-root Mui-error MuiFormHelperText-sizeSmall MuiFormHelperText-contained Mui-required css-k4qjio-MuiFormHelperText-root"
+            id=":r29:-helper-text"
+          >
+            {item.helperText}
+          </p>
+        )}
       </div>
     )
   } else if (item.type === "time-picker") {
@@ -1267,11 +1350,11 @@ const ProductInput = ({
 
     const renderUploadedUrls = () => {
       if (item?.multiple) {
-        if (state?.uploaded_urls) {
-          return state?.uploaded_urls?.map((url) => {
+        if (state?.images.length > 0) {
+          return state?.images?.map((image) => {
             return (
               <img
-                src={url}
+                src={image.url}
                 height={50}
                 width={50}
                 style={{ margin: "10px" }}
@@ -1419,17 +1502,52 @@ const ProductInput = ({
         </label>
         <div style={{ display: "flex" }}>{renderUploadedUrls()}</div>
         <div className="file-input-box">
-          {/* <button type="button" onClick={() => setOpen(true)}>
-            Choose Files
-          </button> */}
           <div className="upload-btn">
-            <input type="file" />
+            <input
+              type="file"
+              accept="image/*"
+              multiple={true}
+              key={item?.id}
+              onChange={(e) => handleFileChange(e, item)}
+            />
           </div>
         </div>
         <p className="note">
           Multiple file selection allowed, Maximum size of 2MB for each file{" "}
           <span className="text-[#FF0000]"> *</span>
         </p>
+        {item.error && (
+          <p
+            class="MuiFormHelperText-root Mui-error MuiFormHelperText-sizeSmall MuiFormHelperText-contained Mui-required css-k4qjio-MuiFormHelperText-root"
+            id=":r29:-helper-text"
+          >
+            {item.helperText}
+          </p>
+        )}
+        <div className="preview-image">
+          {fileLoading.length > 0 && (
+            <>
+              {fileLoading.map((item, index) => (
+                <div className="image skeleton-box" key={index}></div>
+              ))}
+            </>
+          )}
+          {selectedFiles?.length > 0 &&
+            fileLoading.length === 0 &&
+            selectedFiles?.map((image, index) => {
+              return (
+                <div className="image" key={index}>
+                  <span
+                    className="delete-icon"
+                    onClick={(e) => removePreviewImage(e, image, item)}
+                  >
+                    <img src={CloseIcon} alt="close-icon" />
+                  </span>
+                  <img src={image.url} alt={image.name} className="img-show" />
+                </div>
+              )
+            })}
+        </div>
         {item.hasMicIcon && (
           <>
             <span className="mic-icon upload-image" onClick={openModal}>
@@ -1587,7 +1705,16 @@ const ProductInput = ({
                     <img src={voiceIcon} alt="voice-icon" />
                   </span>
                 )}
-                <span className="file-upload-btn">Upload</span>
+                <button
+                  className={`sbt-button${
+                    aiInputResponse.length === 0 || aiLoading
+                      ? " opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                  onClick={() => fileUpload(aiInputResponse, item)}
+                >
+                  {!aiLoading ? "Upload" : "Loading..."}
+                </button>
               </div>
             </div>
           </div>
