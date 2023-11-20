@@ -153,7 +153,7 @@ const ProductInput = ({
   }
 
   const getLanguageList = async () => {
-    const url = "https://genai.ondcsutr.com/languages"
+    const url = process.env.REACT_APP_LANGUAGE_LIST
     try {
       const response = await cancellablePromise(getCall(url))
       if (response?.results.length > 0) {
@@ -282,7 +282,7 @@ const ProductInput = ({
   const getResponseFromAi = async () => {
     // For Title
     if (aiInput.id === "productName" && aiInput.value.length > 0) {
-      const url = "https://genai.ondcsutr.com/languages/detect"
+      const url = process.env.REACT_APP_LANGUAGE_DETECT
       const body = [aiInput.value]
       try {
         const langDetectResponse = await cancellablePromise(postCall(url, body))
@@ -300,7 +300,7 @@ const ProductInput = ({
       (aiInput.id === "longDescription" || aiInput.id === "description") &&
       aiInput.value.length > 0
     ) {
-      const url = "https://genai.ondcsutr.com/languages/detect"
+      const url = process.env.REACT_APP_LANGUAGE_DETECT
       const body = [aiInput.value]
       try {
         const langDetectResponse = await cancellablePromise(postCall(url, body))
@@ -315,7 +315,7 @@ const ProductInput = ({
 
     //For Image upload
     if (aiInput.id === "images" && aiInput.value.length > 0) {
-      const url = "https://genai.ondcsutr.com/languages/detect"
+      const url = process.env.REACT_APP_LANGUAGE_DETECT
       const body = [aiInput.value]
       try {
         const langDetectResponse = await cancellablePromise(postCall(url, body))
@@ -330,17 +330,13 @@ const ProductInput = ({
 
     //For Product Attribute
     if (aiInput.id === "attributes" && aiInput.value.length > 0) {
-      console.log(
-        "🚀 ~ file: ProductInput.jsx:286 ~ getResponseFromAi ~ aiInput:",
-        aiInput
-      )
       setAiLoading(true)
       await getProductInputAPI(aiInput.value)
     }
   }
 
   const getProductTitleAPI = async (value, language) => {
-    const url = "https://genai.ondcsutr.com/product/title/language"
+    const url = process.env.REACT_APP_PRODUCT_TITLE
     const body = {
       text: value,
       language: language,
@@ -364,7 +360,7 @@ const ProductInput = ({
   }
 
   const getDescriptionAPI = async (value, language, desc) => {
-    const url = "https://genai.ondcsutr.com/product/desc/language"
+    const url = process.env.REACT_APP_PRODUCT_DESCRIPTION
     const body = {
       text: value,
       language: language,
@@ -396,7 +392,7 @@ const ProductInput = ({
     })
     const config = {
       method: "post",
-      url: "https://genai.ondcsutr.com/product/image/gen/language",
+      url: process.env.REACT_APP_PRODUCT_IMAGE_GENERATE,
       headers: {
         samplecount: "1",
         "Content-Type": "application/json"
@@ -417,10 +413,6 @@ const ProductInput = ({
         setAiLoading(false)
       }
     } catch (error) {
-      console.log(
-        "🚀 ~ file: ProductInput.jsx:353 ~ getImageAPI ~ error:",
-        error
-      )
       setAiLoading(false)
       cogoToast.error("Please try again")
     }
@@ -435,7 +427,7 @@ const ProductInput = ({
     })
     const config = {
       method: "post",
-      url: "https://genai.ondcsutr.com/product/attribs",
+      url: process.env.REACT_APP_PRODUCT_ATTRIBS,
       headers: {
         "Content-Type": "application/json"
       },
@@ -497,7 +489,7 @@ const ProductInput = ({
 
   const editImageAPI = async () => {
     if (editImageInputValue.length === 0) return
-    const url = "https://genai.ondcsutr.com/languages/detect"
+    const url = process.env.REACT_APP_LANGUAGE_DETECT
     const body = [editImageInputValue]
     try {
       const langDetectResponse = await cancellablePromise(postCall(url, body))
@@ -521,7 +513,7 @@ const ProductInput = ({
       })
       const config = {
         method: "post",
-        url: "https://genai.ondcsutr.com/product/image/edit/language",
+        url: process.env.REACT_APP_PRODUCT_IMAGE_EDIT,
         headers: {
           samplecount: "1",
           "Content-Type": "application/json"
