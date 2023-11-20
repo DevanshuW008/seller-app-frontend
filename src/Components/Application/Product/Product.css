@@ -213,8 +213,8 @@
 
 .mic-icon {
     position: absolute;
-    top: 45px;
-    right: 11px;
+    top: 38px;
+    right: 2px;
     cursor: pointer;
     background: #fff;
 }
@@ -224,9 +224,8 @@
 }
 
 .mic-icon img {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
 }
 
 .modal-header {
@@ -501,15 +500,15 @@
 
 .attributes-heading .actions .mic-icon {
     position: absolute;
-    top: 0;
-    right: 11px;
+    top: -20px;
+    right: 0px;
     cursor: pointer;
     background: unset;
 }
 
 .attributes-heading .actions .mic-icon img {
-    width: 25px;
-    height: 25px;
+    width: 40px;
+    height: 40px;
 }
 
 .preview-image {

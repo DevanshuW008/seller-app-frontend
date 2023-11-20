@@ -31,6 +31,7 @@ import MicIcon from "../../../Assets/Images/micIcon.svg"
 import CloseIcon from "../../../Assets/Images/closeIcon.svg"
 import WhiteMicIcon from "../../../Assets/Images/whiteMicIcon.svg"
 import voiceIcon from "../../../Assets/Images/voiceIcon.svg"
+import googleMicIcon from "../../../Assets/Images/googleMic.svg"
 import TextBodyModal from "./TextBodyModal"
 import UploadBodyModal from "./UploadBodyModal"
 import useCancellablePromise from "../../../Api/cancelRequest"
@@ -117,6 +118,12 @@ const ProductInput = ({
   useEffect(() => {
     getLanguageList()
   }, [])
+
+  useEffect(() => {
+    if (state["images"]?.length > 0) {
+      setSelectedFiles(state["images"])
+    }
+  }, [state])
 
   const handleFocus = (fieldId) => {
     if (setFocusedField) {
@@ -437,7 +444,6 @@ const ProductInput = ({
       const response = await axios(config)
       if (response?.data.results?.content) {
         setAiInputResponse(response?.data.results?.content)
-
         const contentString = response?.data.results?.content
         if (contentString) {
           const responseData = extractKeyValuePairs(contentString)
@@ -610,7 +616,7 @@ const ProductInput = ({
         {item.hasMicIcon && (
           <>
             <span className="mic-icon" onClick={openModal}>
-              <img src={MicIcon} alt="" />
+              <img src={googleMicIcon} alt="" />
             </span>
             <Modal
               open={open}
@@ -902,7 +908,7 @@ const ProductInput = ({
           <div className="title">Attributes</div>
           <div className="actions relative">
             <span className="mic-icon" onClick={openModal}>
-              <img src={MicIcon} alt="" />
+              <img src={googleMicIcon} alt="" />
             </span>
             <Modal
               open={open}
@@ -1482,7 +1488,6 @@ const ProductInput = ({
         </Stack>
       )
     }
-
     return (
       <div className={`${item.class} relative`}>
         <label
@@ -1492,7 +1497,6 @@ const ProductInput = ({
           {item.title}
           {item.required && <span className="text-[#FF0000]"> *</span>}
         </label>
-        <div style={{ display: "flex" }}>{renderUploadedUrls()}</div>
         <div className="file-input-box">
           <div className="upload-btn">
             <input
@@ -1543,7 +1547,7 @@ const ProductInput = ({
         {item.hasMicIcon && (
           <>
             <span className="mic-icon upload-image" onClick={openModal}>
-              <img src={MicIcon} alt="" />
+              <img src={googleMicIcon} alt="" />
             </span>
             <Modal
               open={open}
