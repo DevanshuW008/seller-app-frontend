@@ -1,4 +1,5 @@
 import React from "react"
+import MDEditor, { selectWord } from "@uiw/react-md-editor"
 
 import Loader from "../../../Assets/Images/loaderSpiner.svg"
 import DeleteIcon from "../../../Assets/Images/deleteIcon.svg"
@@ -55,9 +56,18 @@ const TextBodyModal = ({
                 ) : (
                   <>
                     {item.id !== "images" ? (
-                      <div className="response text-black">
-                        {aiInputResponse}
-                      </div>
+                      <>
+                        <div className="response text-black">
+                          <div data-color-mode="light">
+                            <MDEditor
+                              hideToolbar={true}
+                              value={aiInputResponse}
+                              preview="preview"
+                              height={380}
+                            />
+                          </div>
+                        </div>
+                      </>
                     ) : (
                       <>
                         <div className="show-image">

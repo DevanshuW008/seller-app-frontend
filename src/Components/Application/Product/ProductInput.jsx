@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react"
+import MDEditor from "@uiw/react-md-editor"
 import { styled } from "@mui/material/styles"
 import {
   Autocomplete,
@@ -84,6 +85,7 @@ const ProductInput = ({
   const [open, setOpen] = useState(false)
   const [fetchedImageSize, setFetchedImageSize] = useState(0)
   const { cancellablePromise } = useCancellablePromise()
+  const [showPreview, setShowPreview] = useState(false)
 
   const [selectedFiles, setSelectedFiles] = useState([])
 
@@ -699,6 +701,164 @@ const ProductInput = ({
                 </div>
               </div>
             </Modal>
+          </>
+        )}
+      </div>
+    )
+  } else if (item.type === "input-desc") {
+    return (
+      <div className={`${item.class} relative`}>
+        <div className="desc-input">
+          <label className="text-sm text-label py-2 ml-1 font-medium text-left text-[#606161] inline-block">
+            {item.title}
+            {item.required && <span className="text-[#FF0000]"> *</span>}
+          </label>
+          {state[item.id].length > 0 && (
+            <div className="toggle-menu">
+              <label className={`switch round`}>
+                <input
+                  type="checkbox"
+                  checked={showPreview}
+                  onChange={() => setShowPreview(!showPreview)}
+                />
+                <span className={`slider round`} />
+              </label>
+              <span className="text">Show Preview</span>
+            </div>
+          )}
+        </div>
+        {!showPreview ? (
+          <>
+            <CssTextField
+              type={item.password ? "password" : "input"}
+              className="w-full h-full text-input px-2.5 py-3.5 text-[#606161] bg-transparent !border-black"
+              required={item.required}
+              size="small"
+              multiline={item.multiline || false}
+              maxRows={item.multiline ? 5 : 1}
+              autoComplete="off"
+              placeholder={item.placeholder}
+              error={item.error || false}
+              disabled={item?.isDisabled || previewOnly || false}
+              helperText={item.error && item.helperText}
+              value={state[item.id]}
+              onChange={(e) => onChangeHandler(e.target.value, item)}
+              inputProps={{
+                maxLength: item.maxLength || undefined,
+                minLength: item.minLength || undefined
+              }}
+              onFocus={() => handleFocus(item.id)}
+              onBlur={handleBlur}
+            />
+            {item.hasMicIcon && (
+              <>
+                <span className="mic-icon" onClick={openModal}>
+                  <img src={googleMicIcon} alt="" />
+                </span>
+                <Modal
+                  open={open}
+                  keepMounted
+                  //   onClose={() => setOpen(false)}
+                  aria-labelledby="modal-modal-title"
+                  aria-describedby="modal-modal-description"
+                >
+                  <div className="speech-modal">
+                    <div
+                      className={`modal-header${
+                        item.id === "longDescription" ||
+                        item.id === "description"
+                          ? " des-header"
+                          : ""
+                      }`}
+                    >
+                      <div className="toggle-menu">
+                        {aiInputResponse.length > 0 && <></>}
+                      </div>
+                      <span
+                        className="close-btn cursor-pointer"
+                        onClick={closeModal}
+                      >
+                        <img src={CloseIcon} alt="close-icon" />
+                      </span>
+                    </div>
+                    <div className="modal-body">
+                      <TextBodyModal
+                        listening={listening}
+                        aiInput={aiInput}
+                        item={item}
+                        aiInputResponse={aiInputResponse}
+                        setAiInput={setAiInput}
+                        aiLoading={aiLoading}
+                      />
+                    </div>
+                    <div className="modal-footer">
+                      <div className="btn-group">
+                        <div className="lang-select">
+                          <Autocomplete
+                            size="small"
+                            options={languageList}
+                            getOptionLabel={(option) => option.key}
+                            value={selectLanguage}
+                            isOptionEqualToValue={(option, value) =>
+                              option.key === value.key
+                            }
+                            disableClearable={true}
+                            onChange={(event, newValue) => {
+                              setSelectLanguage(newValue)
+                            }}
+                            className="text-input"
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                placeholder={"Select your language"}
+                                variant="outlined"
+                                error={item.error || false}
+                                helperText={item.error && item.helperText}
+                              />
+                            )}
+                          />
+                        </div>
+                        {!listening ? (
+                          <button
+                            className={`mic-button${
+                              aiLoading ? " opacity-50 cursor-not-allowed" : ""
+                            }`}
+                            onClick={() => handleStartListening(item)}
+                          >
+                            <img src={WhiteMicIcon} alt="mic-icon" />
+                          </button>
+                        ) : (
+                          <span className="mic-button">
+                            <img src={voiceIcon} alt="voice-icon" />
+                          </span>
+                        )}
+                        <button
+                          className={`sbt-button${
+                            aiInputResponse.length === 0
+                              ? " opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
+                          onClick={() => getInputTitle(item)}
+                        >
+                          {!aiLoading ? "Submit" : "Loading..."}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </Modal>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <div data-color-mode="light" className="desc-markdown p-1">
+              <MDEditor
+                hideToolbar={true}
+                value={state[item.id]}
+                preview="preview"
+                height="115px"
+              />
+            </div>
           </>
         )}
       </div>
