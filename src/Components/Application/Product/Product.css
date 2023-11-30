@@ -12,12 +12,25 @@
     left: 50%;
     transform: translate(-50%, -50%);
     width: 576px;
-    height: 600px;
+    height: 576px;
     background-color: #FFF;
     border: 1px solid #E0E0E0;
     border-radius: 5px;
     padding: 20px;
     outline: none !important;
+}
+
+
+.position-relative {
+    position: relative;
+}
+
+.w-md-editor-bar {
+    display: none !important;
+}
+
+.wmde-markdown-var {
+    resize: none !important;
 }
 
 .divider {
@@ -586,10 +599,16 @@
     content: "";
 }
 
-.toggle-menu {
-    height: 48px;
-    position: relative;
+.desc-input {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
+.toggle-menu {
+    position: relative;
+    width: 172px;
+    height: 50px;
 }
 
 .toggle-menu .text {
@@ -661,7 +680,13 @@
 }
 
 
-
+.desc-mic-input .mic-icon {
+    position: absolute;
+    top: 1px;
+    right: 2px;
+    cursor: pointer;
+    background: #fff;
+}
 
 @-webkit-keyframes shimmer {
     100% {

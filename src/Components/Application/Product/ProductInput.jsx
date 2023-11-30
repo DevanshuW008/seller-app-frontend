@@ -729,32 +729,34 @@ const ProductInput = ({
         </div>
         {!showPreview ? (
           <>
-            <CssTextField
-              type={item.password ? "password" : "input"}
-              className="w-full h-full text-input px-2.5 py-3.5 text-[#606161] bg-transparent !border-black"
-              required={item.required}
-              size="small"
-              multiline={item.multiline || false}
-              maxRows={item.multiline ? 5 : 1}
-              autoComplete="off"
-              placeholder={item.placeholder}
-              error={item.error || false}
-              disabled={item?.isDisabled || previewOnly || false}
-              helperText={item.error && item.helperText}
-              value={state[item.id]}
-              onChange={(e) => onChangeHandler(e.target.value, item)}
-              inputProps={{
-                maxLength: item.maxLength || undefined,
-                minLength: item.minLength || undefined
-              }}
-              onFocus={() => handleFocus(item.id)}
-              onBlur={handleBlur}
-            />
+            <div className="position-relative desc-mic-input">
+              <CssTextField
+                type={item.password ? "password" : "input"}
+                className="w-full h-full text-input px-2.5 py-3.5 text-[#606161] bg-transparent !border-black"
+                required={item.required}
+                size="small"
+                multiline={item.multiline || false}
+                maxRows={item.multiline ? 5 : 1}
+                autoComplete="off"
+                placeholder={item.placeholder}
+                error={item.error || false}
+                disabled={item?.isDisabled || previewOnly || false}
+                helperText={item.error && item.helperText}
+                value={state[item.id]}
+                onChange={(e) => onChangeHandler(e.target.value, item)}
+                inputProps={{
+                  maxLength: item.maxLength || undefined,
+                  minLength: item.minLength || undefined
+                }}
+                onFocus={() => handleFocus(item.id)}
+                onBlur={handleBlur}
+              />
+              <span className="mic-icon" onClick={openModal}>
+                <img src={googleMicIcon} alt="" />
+              </span>
+            </div>
             {item.hasMicIcon && (
               <>
-                <span className="mic-icon" onClick={openModal}>
-                  <img src={googleMicIcon} alt="" />
-                </span>
                 <Modal
                   open={open}
                   keepMounted
@@ -763,17 +765,7 @@ const ProductInput = ({
                   aria-describedby="modal-modal-description"
                 >
                   <div className="speech-modal">
-                    <div
-                      className={`modal-header${
-                        item.id === "longDescription" ||
-                        item.id === "description"
-                          ? " des-header"
-                          : ""
-                      }`}
-                    >
-                      <div className="toggle-menu">
-                        {aiInputResponse.length > 0 && <></>}
-                      </div>
+                    <div className={`modal-header`}>
                       <span
                         className="close-btn cursor-pointer"
                         onClick={closeModal}
