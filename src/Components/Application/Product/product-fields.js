@@ -303,7 +303,7 @@ const productFields = [
     id: "description",
     title: "Short Description",
     placeholder: "Short Description",
-    type: "input-desc",
+    type: "input",
     required: true,
     multiline: true,
     class: 'col-span-6',

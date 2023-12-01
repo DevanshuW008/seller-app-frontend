@@ -272,8 +272,15 @@
     padding: 15px;
 }
 
-.text-body-modal textarea {
+.text-body-modal .speech-modal-textarea {
     background: #F5F5F5;
+    width: 100%;
+    height: 100%;
+    outline: none !important;
+    resize: none;
+}
+
+.text-body-modal textarea {
     width: 100%;
     height: 100%;
     outline: none !important;
@@ -492,7 +499,7 @@
 .loader {
     position: absolute;
     right: 30px;
-    top: 100px;
+    top: 70px;
     width: 28px;
     height: 28px;
     border: 5px solid #007aff;
@@ -607,15 +614,20 @@
 
 .toggle-menu {
     position: relative;
-    width: 172px;
-    height: 50px;
+    width: 205px;
+    height: 36px;
+    padding-bottom: 8px;
 }
 
 .toggle-menu .text {
     position: absolute;
-    width: 107px;
+    width: max-content;
     left: 70px;
     top: 15px;
+    font-size: 14px;
+    color: #606161;
+    font-weight: 500;
+    top: 10px;
 }
 
 .switch {
@@ -624,8 +636,9 @@
     width: 100px;
     height: 50px;
     margin: 0px;
-    transform: scale(0.5);
-    left: -20px;
+    transform: scale(0.4);
+    left: -10px;
+    top: -5px;
 }
 
 .switch input {

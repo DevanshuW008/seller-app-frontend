@@ -1,5 +1,13 @@
-import React from "react"
-import MDEditor, { selectWord } from "@uiw/react-md-editor"
+import React, { useEffect } from "react"
+import MDEditor, {
+  bold,
+  commands,
+  hr,
+  italic,
+  orderedListCommand,
+  strikethrough,
+  unorderedListCommand
+} from "@uiw/react-md-editor"
 
 import Loader from "../../../Assets/Images/loaderSpiner.svg"
 import DeleteIcon from "../../../Assets/Images/deleteIcon.svg"
@@ -16,7 +24,10 @@ const TextBodyModal = ({
   editImage,
   isImageEdit,
   editImageInputValue,
-  setEditImageInputValue
+  setEditImageInputValue,
+  markdownValue,
+  setMarkdownValue,
+  setAiInputResponse
 }) => {
   const changeHandler = (event) => {
     setAiInput({
@@ -24,6 +35,12 @@ const TextBodyModal = ({
       value: event.target.value
     })
   }
+
+  useEffect(() => {
+    if (markdownValue?.length > 0) {
+      setAiInputResponse(markdownValue)
+    }
+  }, [markdownValue])
 
   return (
     <div className="text-body-modal">
@@ -36,6 +53,7 @@ const TextBodyModal = ({
                   placeholder="Text or Speech"
                   value={aiInput.value}
                   onChange={changeHandler}
+                  className="speech-modal-textarea"
                   disabled={aiLoading}
                 ></textarea>
                 {aiLoading && (
@@ -58,14 +76,29 @@ const TextBodyModal = ({
                     {item.id !== "images" ? (
                       <>
                         <div className="response text-black">
-                          <div data-color-mode="light">
-                            <MDEditor
-                              hideToolbar={true}
-                              value={aiInputResponse}
-                              preview="preview"
-                              height={380}
-                            />
-                          </div>
+                          {item.type === "input-desc" ? (
+                            <div data-color-mode="light">
+                              <MDEditor
+                                hideToolbar={false}
+                                value={markdownValue}
+                                onChange={setMarkdownValue}
+                                preview="edit"
+                                height={380}
+                                commands={[
+                                  // Custom Toolbars
+                                  bold,
+                                  italic,
+                                  strikethrough,
+                                  hr,
+                                  commands.divider,
+                                  unorderedListCommand,
+                                  orderedListCommand
+                                ]}
+                              />
+                            </div>
+                          ) : (
+                            aiInputResponse
+                          )}
                         </div>
                       </>
                     ) : (

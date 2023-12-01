@@ -86,6 +86,7 @@ const ProductInput = ({
   const [fetchedImageSize, setFetchedImageSize] = useState(0)
   const { cancellablePromise } = useCancellablePromise()
   const [showPreview, setShowPreview] = useState(false)
+  const [markdownValue, setMarkdownValue] = useState("")
 
   const [selectedFiles, setSelectedFiles] = useState([])
 
@@ -254,6 +255,7 @@ const ProductInput = ({
     setAiLoading(false)
     setIsImageEdit(false)
     setEditImageInputValue("")
+    setMarkdownValue("")
   }
 
   const getInputTitle = async (item, language) => {
@@ -271,6 +273,8 @@ const ProductInput = ({
       value: ""
     })
     setAiInputResponse("")
+    setMarkdownValue("")
+    setEditImageInputValue("")
   }
 
   const openModal = () => {
@@ -381,6 +385,7 @@ const ProductInput = ({
       const response = await cancellablePromise(postCall(url, body))
       if (response?.results?.translatedContent) {
         setAiInputResponse(response.results.translatedContent)
+        setMarkdownValue(response.results.translatedContent)
         setAiLoading(false)
       } else {
         cogoToast.error("Please try again")
@@ -723,7 +728,7 @@ const ProductInput = ({
                 />
                 <span className={`slider round`} />
               </label>
-              <span className="text">Show Preview</span>
+              <span className="text">Markdown Preview</span>
             </div>
           )}
         </div>
@@ -781,6 +786,9 @@ const ProductInput = ({
                         aiInputResponse={aiInputResponse}
                         setAiInput={setAiInput}
                         aiLoading={aiLoading}
+                        markdownValue={markdownValue}
+                        setMarkdownValue={setMarkdownValue}
+                        setAiInputResponse={setAiInputResponse}
                       />
                     </div>
                     <div className="modal-footer">
